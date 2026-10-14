@@ -1,0 +1,50 @@
+filters:
+  and:
+    - tipo == "user-story"
+views:
+  - type: kanban
+    name: Tablero Kanban de Historias
+    groupBy:
+      property: estado
+      direction: ASC
+    groupOrder:
+      - backlog
+      - sprint-backlog
+      - in-progress
+    order:
+      - id
+      - titulo
+      - modulo
+      - rol
+      - sprint
+      - story_points
+      - prioridad
+  - type: table
+    name: Product Backlog por Sprint
+    groupBy:
+      property: sprint
+      direction: ASC
+    order:
+      - id
+      - titulo
+      - modulo
+      - rol
+      - story_points
+      - prioridad
+      - estado
+    summaries:
+      story_points: Sum
+  - type: table
+    name: Matriz MoSCoW
+    groupBy:
+      property: prioridad
+      direction: ASC
+    order:
+      - id
+      - titulo
+      - modulo
+      - sprint
+      - story_points
+      - estado
+    summaries:
+      story_points: Sum
