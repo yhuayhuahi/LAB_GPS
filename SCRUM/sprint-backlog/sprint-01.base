@@ -13,6 +13,8 @@ views:
     groupOrder:
       - todo
       - in-progress
+      - in-review
+      - done
     order:
       - id
       - titulo

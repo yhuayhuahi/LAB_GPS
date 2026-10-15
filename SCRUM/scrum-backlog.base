@@ -11,6 +11,7 @@ views:
       - backlog
       - sprint-backlog
       - in-progress
+      - done
     order:
       - id
       - titulo
