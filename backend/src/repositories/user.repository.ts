@@ -45,6 +45,29 @@ export class UserRepository {
     return db.queryOne<User>(sql, [id]);
   }
 
+  async findByBranchId(branchId: string): Promise<(User & { role_name: RoleName; branch_name: string | null })[]> {
+    const sql = `
+      SELECT 
+        u.id, 
+        u.email, 
+        u.password_hash,
+        u.full_name, 
+        u.role_id, 
+        r.name as role_name,
+        u.branch_id,
+        b.name as branch_name,
+        u.observations, 
+        u.is_active, 
+        u.created_at
+      FROM users u
+      INNER JOIN roles r ON u.role_id = r.id
+      LEFT JOIN branches b ON u.branch_id = b.id
+      WHERE u.branch_id = $1
+      ORDER BY u.full_name ASC;
+    `;
+    return db.query<User & { role_name: RoleName; branch_name: string | null }>(sql, [branchId]);
+  }
+
   async create(user: Omit<User, 'created_at'>): Promise<User> {
     const sql = `
       INSERT INTO users (id, email, password_hash, full_name, role_id, branch_id, observations, is_active)

@@ -17,5 +17,14 @@ export const updateBranchSchema = createBranchSchema.partial().extend({
   is_active: z.boolean().optional()
 });
 
+export const createBranchUserSchema = z.object({
+  email: z.string().email('El correo electrónico no es válido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  full_name: z.string().min(3, 'El nombre completo es obligatorio'),
+  role_id: z.string().default('role-03'),
+  observations: z.string().optional()
+});
+
 export type CreateBranchInput = z.infer<typeof createBranchSchema>;
 export type UpdateBranchInput = z.infer<typeof updateBranchSchema>;
+export type CreateBranchUserInput = z.infer<typeof createBranchUserSchema>;

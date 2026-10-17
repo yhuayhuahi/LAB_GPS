@@ -59,6 +59,34 @@ export class BranchController {
       next(err);
     }
   }
+
+  async listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const users = await branchService.listBranchUsers(req.params.id);
+      const response: ApiResponse<typeof users> = {
+        success: true,
+        data: users,
+        timestamp: new Date().toISOString()
+      };
+      res.status(200).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async createUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = await branchService.createUserForBranch(req.params.id, req.body);
+      const response: ApiResponse<typeof user> = {
+        success: true,
+        data: user,
+        timestamp: new Date().toISOString()
+      };
+      res.status(201).json(response);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const branchController = new BranchController();

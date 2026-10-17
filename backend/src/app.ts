@@ -20,8 +20,9 @@ export function createApp(): Express {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
 
-  // Enrutamiento versión 1 de la API
+  // Enrutamiento versión 1 de la API y compatibilidad con prefijo /api
   app.use('/api/v1', routes);
+  app.use('/api', routes);
 
   // Manejo de rutas inexistentes (404)
   app.use((req: Request, _res: Response) => {

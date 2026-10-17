@@ -1,7 +1,9 @@
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { branchRepository } from '../repositories/branch.repository';
-import { CreateBranchInput, UpdateBranchInput } from '../schemas/branch.schema';
-import { Branch } from '../types/domain';
+import { userRepository } from '../repositories/user.repository';
+import { CreateBranchInput, UpdateBranchInput, CreateBranchUserInput } from '../schemas/branch.schema';
+import { Branch, User } from '../types/domain';
 import { AppError } from '../types/responses';
 
 export class BranchService {
@@ -56,6 +58,41 @@ export class BranchService {
 
     const updated = await branchRepository.update(id, input);
     return updated!;
+  }
+
+  async listBranchUsers(branchId: string): Promise<Omit<User, 'password_hash'>[]> {
+    await this.getBranchById(branchId);
+    const users = await userRepository.findByBranchId(branchId);
+    return users.map(({ password_hash: _pass, ...rest }) => rest);
+  }
+
+  async createUserForBranch(branchId: string, input: CreateBranchUserInput): Promise<Omit<User, 'password_hash'>> {
+    await this.getBranchById(branchId);
+
+    const existing = await userRepository.findByEmail(input.email);
+    if (existing) {
+      throw AppError.conflict(
+        `Ya existe un usuario registrado con el correo '${input.email}'`,
+        'USER_EMAIL_EXISTS'
+      );
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const password_hash = await bcrypt.hash(input.password, salt);
+
+    const newUser = await userRepository.create({
+      id: `user-${crypto.randomUUID()}`,
+      email: input.email.toLowerCase(),
+      password_hash,
+      full_name: input.full_name,
+      role_id: input.role_id || 'role-03',
+      branch_id: branchId,
+      observations: input.observations,
+      is_active: true
+    });
+
+    const { password_hash: _pass, ...rest } = newUser;
+    return rest;
   }
 }
 

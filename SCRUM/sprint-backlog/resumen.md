@@ -3,7 +3,7 @@ tipo: sprint-summary
 sprint: Sprint 1
 duracion: 2 semanas
 story_points: 18
-estado: in-progress
+estado: done
 periodo: Semanas 06 - 07
 tags:
   - sprint-summary
@@ -29,10 +29,10 @@ Establecer los cimientos arquitectónicos, el modelo de datos relacional y el si
 
 | ID | Título | Módulo | Rol | Story Points | Prioridad MoSCoW | Estado |
 |---|---|---|---|---|---|---|
-| `[[HU-01]]` | Autenticación y control de acceso basado en roles (RBAC) | M1 - Administración y Seguridad | Administrador | **8 SP** | Must Have | `in-progress` |
-| `[[HU-02]]` | Gestión del padrón de locales distribuidores | M1 - Administración y Seguridad | Administrador | **5 SP** | Must Have | `in-progress` |
-| `[[HU-03]]` | Catálogo de libros, precios y comisiones fijas | M1 - Administración y Seguridad | Administrador | **5 SP** | Must Have | `in-progress` |
-| **TOTAL** | **3 Historias de Usuario Comprometidas** | — | — | **18 SP** | — | — |
+| `[[HU-01]]` | Autenticación y control de acceso basado en roles (RBAC) | M1 - Administración y Seguridad | Administrador | **8 SP** | Must Have | `done` |
+| `[[HU-02]]` | Gestión del padrón de locales distribuidores | M1 - Administración y Seguridad | Administrador | **5 SP** | Must Have | `done` |
+| `[[HU-03]]` | Catálogo de libros, precios y comisiones fijas | M1 - Administración y Seguridad | Administrador | **5 SP** | Must Have | `done` |
+| **TOTAL** | **3 Historias de Usuario Comprometidas** | — | — | **18 SP** | — | **100% Completado** |
 
 ---
 
