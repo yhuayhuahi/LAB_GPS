@@ -1,0 +1,11 @@
+[language-server.tinymist]
+command = "tinymist"
+# Activar modo solo sintaxis y especificar main.typ como archivo de entrada principal
+config = { syntaxOnly = "enable", exportPdf = "onSave", outputPath = "$root/build/$name", typstExtraArgs = ["main.typ"] } 
+
+[language.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'
+'$' = '$'
+'"' = '"'
