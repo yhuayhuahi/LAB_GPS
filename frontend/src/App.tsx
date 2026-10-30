@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OfflineBanner } from './components/common/OfflineBanner';
 import { Navbar } from './components/common/Navbar';
+import type { NavTab } from './components/common/Navbar';
 import { LoginView } from './views/auth/LoginView';
 import { BranchesView } from './views/admin/BranchesView';
 import { ProductsView } from './views/admin/ProductsView';
+import { InventoryView } from './views/inventory/InventoryView';
+import { ConsignmentsView } from './views/consignments/ConsignmentsView';
 
 const MainApp: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const [currentTab, setCurrentTab] = useState<'branches' | 'products'>('branches');
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [currentTab, setCurrentTab] = useState<NavTab>(
+    user?.role === 'DISTRIBUTOR' ? 'inventory' : 'branches'
+  );
 
   if (isLoading) {
     return (
@@ -30,13 +35,26 @@ const MainApp: React.FC = () => {
     );
   }
 
+  const renderContent = () => {
+    switch (currentTab) {
+      case 'branches':
+        return <BranchesView />;
+      case 'products':
+        return <ProductsView />;
+      case 'inventory':
+        return <InventoryView />;
+      case 'consignments':
+        return <ConsignmentsView />;
+      default:
+        return <InventoryView />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <OfflineBanner />
       <Navbar currentTab={currentTab} onSelectTab={setCurrentTab} />
-      <main className="flex-1">
-        {currentTab === 'branches' ? <BranchesView /> : <ProductsView />}
-      </main>
+      <main className="flex-1">{renderContent()}</main>
     </div>
   );
 };

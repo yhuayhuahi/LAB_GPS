@@ -1,0 +1,54 @@
+filters:
+  and:
+    - sprint == "Sprint 2"
+views:
+  - type: kanban
+    name: Tablero Kanban - Tareas Sprint 2
+    filters:
+      and:
+        - tipo == "task"
+    groupBy:
+      property: estado
+      direction: ASC
+    groupOrder:
+      - todo
+      - in-progress
+      - in-review
+      - done
+    order:
+      - id
+      - titulo
+      - componente
+      - estimacion_horas
+      - historia_padre
+      - responsable
+  - type: table
+    name: Lista de Tareas y Horas Sprint 2
+    filters:
+      and:
+        - tipo == "task"
+    order:
+      - id
+      - titulo
+      - historia_padre
+      - componente
+      - responsable
+      - estimacion_horas
+      - estado
+    summaries:
+      estimacion_horas: Sum
+  - type: table
+    name: Historias del Sprint 2
+    filters:
+      and:
+        - tipo == "user-story"
+    order:
+      - id
+      - titulo
+      - modulo
+      - rol
+      - story_points
+      - estado
+    summaries:
+      story_points: Sum
+

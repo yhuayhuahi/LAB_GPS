@@ -153,3 +153,55 @@ Para que en la exposición puedas abrir los archivos y mostrarlos con nombre pro
 - **QA & Tests:** Pruebas que validan creación de libros (201), bloqueo ante comisión mayor o igual al precio (400), bloqueo cuando un distribuidor intenta modificar un precio (403) y lectura correcta del catálogo.
 
 
+
+
+---
+
+## PARTE 3: Sprint 2 - Inventario Central, Despacho en Consignación y Alertas (21 SP)
+
+El Sprint 2 consolida el flujo completo de abastecimiento y custodia de existencias de Editorial QSY:
+
+### Lista de las 17 Tareas del Sprint 2
+| ID Tarea   | Título Técnico                                                             | Responsable | Estimación | Estado |
+| ---------- | -------------------------------------------------------------------------- | ----------- | ---------- | ------ |
+| TASK-04-01 | Script DDL para central_stock y tablas de consignación                     | Yourdyy     | 3 h        | done   |
+| TASK-04-02 | Endpoints REST de despacho en consignación y validación RN-01              | Leonardo    | 5 h        | done   |
+| TASK-04-03 | Interfaz web de preparación y emisión de despachos                         | Miguel      | 5 h        | done   |
+| TASK-04-04 | Pruebas de integración de despacho y validación de stock central           | Dolly       | 3 h        | done   |
+| TASK-05-01 | Endpoints REST de recepción de lotes y acreditación en branch_stock        | Leonardo    | 4 h        | done   |
+| TASK-05-02 | Interfaz web móvil (Mobile-First) de confirmación y reporte de discrepancias | Miguel      | 4 h        | done   |
+| TASK-05-03 | Pruebas funcionales de recepción conforme y aislamiento por sede (RN-05)   | Dolly       | 2 h        | done   |
+| TASK-06-01 | Endpoints REST de matriz de balance consolidado y restricción territorial  | Leonardo    | 4 h        | done   |
+| TASK-06-02 | Interfaz web de matriz de inventario y vista de mostrador por sede         | Miguel      | 5 h        | done   |
+| TASK-06-03 | Pruebas de visibilidad cruzada para Admin y restricción para Distribuidor | Dolly       | 3 h        | done   |
+| TASK-07-01 | Script DDL tabla non_commercial_exits y modelo de kardex de bajas          | Yourdyy     | 3 h        | done   |
+| TASK-07-02 | Endpoints REST de salidas especiales con validación de justificación (RN-07) | Leonardo    | 4 h        | done   |
+| TASK-07-03 | Interfaz web modal para registro de muestras docentes y mermas             | Miguel      | 4 h        | done   |
+| TASK-07-04 | Pruebas de validación estricta de motivo (RN-07) y descuento en kardex     | Dolly       | 2 h        | done   |
+| TASK-08-01 | Servicio y endpoints REST de detección de stock crítico y umbrales         | Leonardo    | 3 h        | done   |
+| TASK-08-02 | Componente visual de alertas dinámicas con insignias y resaltado en rojo   | Miguel      | 4 h        | done   |
+| TASK-08-03 | Pruebas de activación y normalización automática de alertas ante reposición | Dolly       | 2 h        | done   |
+
+### Qué parte exacta del código se implementó en cada Historia del Sprint 2:
+- **HU-04 (Despacho en Consignación - 5 SP):**
+  - *Base de datos:* Tablas `central_stock`, `consignments`, `consignment_items` en `schema.sql`.
+  - *Backend:* `consignment.service.ts` (`createDispatch`), validación de existencias centrales (RN-01), descuento automático y numeración correlativa `DESP-YYYY-XXXX`.
+  - *Frontend:* Modal en `ConsignmentsView.tsx` con selección de sede y adición dinámica de títulos.
+  - *QA:* Suite en `sprint2.integration.test.ts` que valida alta en central, emisión y bloqueo por sobreventa (400).
+- **HU-05 (Confirmación Digital de Recepción - 3 SP):**
+  - *Backend:* `consignment.service.ts` (`confirmReception`), acreditación automática en `branch_stock` y restricción RN-05 (403 si un distribuidor intenta confirmar otra sede).
+  - *Frontend:* Botones en `ConsignmentsView.tsx` para "Conforme" directo o "Observar Faltante" con reporte de daños.
+  - *QA:* Pruebas de recepción conforme y con discrepancia (status `OBSERVED`).
+- **HU-06 (Consulta de Stock Central y Multisede - 5 SP):**
+  - *Backend:* `inventory.service.ts` (`getInventoryBalance`), matriz consolidada para Logística/Admin y filtro territorial estricto para Distribuidores.
+  - *Frontend:* `InventoryView.tsx` con tabla matriz multisede y vista resumida de mostrador.
+  - *QA:* Verificación de visibilidad global para Administrador y aislamiento de cifras para distribuidores.
+- **HU-07 (Salidas No Comerciales y Mermas Justificadas - 5 SP):**
+  - *Base de datos:* Tabla `non_commercial_exits` con tipo, origen, cantidad y justificación.
+  - *Backend:* `inventory.service.ts` (`registerNonCommercialExit`), validación Zod de motivo $\ge 5$ caracteres (RN-07) y descuento atómico.
+  - *Frontend:* Modal de egreso y kardex histórico en `InventoryView.tsx`.
+  - *QA:* Pruebas de rechazo sin motivo (400) y verificación de auditoría.
+- **HU-08 (Alertas de Stock Crítico - 3 SP):**
+  - *Backend:* `inventory.service.ts` (`getCriticalAlerts`) con umbral $\le 3$ unidades por sede.
+  - *Frontend:* Badge contador con animación de pulso en `Navbar.tsx` y banner en `InventoryView.tsx`.
+  - *QA:* Pruebas de detonación de alerta roja y normalización automática tras reposición.

@@ -2,7 +2,7 @@
 -- SCRIPT DDL: SISTEMA DE GESTIÓN COMERCIAL Y CONTROL DE EXISTENCIAS (QSY)
 -- Compatibilidad: PostgreSQL 14+ / SQLite 3 (Sintaxis Estándar ANSI SQL)
 -- Autor: Yourdyy (Scrum Master / Arquitecto de Software)
--- Fecha: 2026-10-14 (Actualizado según retroalimentación de alcance)
+-- Sprint 1 + Sprint 2: Control de Inventario Central y Despachos en Consignación
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
@@ -61,6 +61,36 @@ CREATE TABLE IF NOT EXISTS products (
     observations TEXT,                         -- Comentarios u observaciones editoriales
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ------------------------------------------------------------------------------
+-- 4.1. TABLA: CENTRAL_STOCK (Existencias en Almacén Central de la Editorial)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS central_stock (
+    id VARCHAR(36) PRIMARY KEY,
+    product_id VARCHAR(36) NOT NULL UNIQUE,
+    current_quantity INTEGER NOT NULL DEFAULT 0 CHECK (current_quantity >= 0),
+    min_critical_stock INTEGER NOT NULL DEFAULT 5 CHECK (min_critical_stock >= 0),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
+);
+
+-- ------------------------------------------------------------------------------
+-- 4.2. TABLA: NON_COMMERCIAL_EXITS (Kardex de Salidas Especiales, Muestras y Mermas)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS non_commercial_exits (
+    id VARCHAR(36) PRIMARY KEY,
+    product_id VARCHAR(36) NOT NULL,
+    source_type VARCHAR(20) NOT NULL,           -- 'CENTRAL', 'BRANCH'
+    branch_id VARCHAR(36),                      -- NULL si origen es Almacén Central
+    movement_type VARCHAR(50) NOT NULL,         -- 'MUESTRA_DOCENTE', 'CORTESIA', 'PROMOCION', 'SORTEO', 'MERMA_DANO', 'AJUSTE'
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    justification TEXT NOT NULL,                -- RN-07: Justificación obligatoria
+    authorized_by_user_id VARCHAR(36) NOT NULL, -- Usuario que autoriza el egreso
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE RESTRICT,
+    FOREIGN KEY (authorized_by_user_id) REFERENCES users(id) ON DELETE RESTRICT
 );
 
 -- ------------------------------------------------------------------------------
@@ -174,6 +204,9 @@ CREATE TABLE IF NOT EXISTS daily_settlements (
 -- ÍNDICES DE RENDIMIENTO Y AISLAMIENTO DE DATOS MULTI-SEDE
 -- ==============================================================================
 CREATE INDEX IF NOT EXISTS idx_users_branch_id ON users(branch_id);
+CREATE INDEX IF NOT EXISTS idx_central_stock_product ON central_stock(product_id);
+CREATE INDEX IF NOT EXISTS idx_non_comm_exits_prod ON non_commercial_exits(product_id);
+CREATE INDEX IF NOT EXISTS idx_non_comm_exits_branch ON non_commercial_exits(branch_id);
 CREATE INDEX IF NOT EXISTS idx_branch_stock_lookup ON branch_stock(branch_id, product_id);
 CREATE INDEX IF NOT EXISTS idx_sales_branch_date ON sales(branch_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_sales_customer_dni ON sales(customer_dni);
@@ -197,17 +230,3 @@ ON CONFLICT (name) DO NOTHING;
 INSERT INTO users (id, email, password_hash, full_name, role_id, branch_id, observations, is_active) VALUES
 ('user-admin-01', 'admin@editorialqsy.com', '$2b$10$fimOaIiaveBCbnNLzG89KuOw5mY39wJ9hCquAqnLq9EpL/2.iKFb2', 'Administrador General QSY', 'role-01', NULL, 'Cuenta semilla maestra del sistema', TRUE)
 ON CONFLICT (email) DO NOTHING;
-
--- NOTA ARQUITECTÓNICA DE SEMBRADO DINÁMICO:
--- Las tablas `branches`, `products` y `users` (distribuidores/empleados) se mantienen 
--- vacías por diseño. El Administrador General es el responsable de dar de alta:
---   1. Las Distribuidoras Aliadas (Trilce, Siglo XX, Jerusalén u otras nuevas) vía HU-02.
---   2. El Catálogo de Libros, precios y comisiones fijas vía HU-03.
---   3. Las Cuentas de Empleados / Distribuidores asignadas a cada sede vía HU-01.
---
--- Datos opcionales para pruebas / testing local:
--- INSERT INTO branches (id, code, name, address, phone, manager_name) VALUES
--- ('branch-01', 'SEDE-TRILCE', 'Distribuidora Trilce', 'San Juan de Dios 214', '959123456', 'Distribuidor Trilce'),
--- ('branch-02', 'SEDE-SIGLOXX', 'Distribuidora Siglo XX', 'Siglo XX 108', '958765432', 'Distribuidor Siglo XX'),
--- ('branch-03', 'SEDE-JERUSALEN', 'Distribuidora Jerusalén', 'Jerusalén 302', '957112233', 'Distribuidor Jerusalén');
-

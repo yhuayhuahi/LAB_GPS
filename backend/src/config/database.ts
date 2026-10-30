@@ -31,25 +31,28 @@ class SqliteAdapter implements IDatabase {
     this.db.exec('PRAGMA journal_mode = WAL;');
   }
 
-  private normalizeSql(sql: string, hasParams: boolean): string {
-    if (!hasParams) return sql;
-    return sql.replace(/\$\d+/g, '?');
-  }
-
-  private normalizeParams(params?: unknown[]): unknown[] {
-    if (!params) return [];
-    return params.map(p => (typeof p === 'boolean' ? (p ? 1 : 0) : p === undefined ? null : p));
+  private prepareSqlAndParams(sql: string, params?: unknown[]): { normalizedSql: string; orderedParams: unknown[] } {
+    if (!params || params.length === 0) {
+      return { normalizedSql: sql, orderedParams: [] };
+    }
+    const safeParams = params.map((p) => (typeof p === 'boolean' ? (p ? 1 : 0) : p === undefined ? null : p));
+    const orderedParams: unknown[] = [];
+    const normalizedSql = sql.replace(/\$(\d+)/g, (_, numStr) => {
+      const idx = parseInt(numStr, 10) - 1;
+      orderedParams.push(safeParams[idx]);
+      return '?';
+    });
+    return { normalizedSql, orderedParams };
   }
 
   async query<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
-    const safeParams = this.normalizeParams(params);
-    if (safeParams.length === 0) {
+    const { normalizedSql, orderedParams } = this.prepareSqlAndParams(sql, params);
+    if (orderedParams.length === 0) {
       const stmt = this.db.prepare(sql);
       return stmt.all() as T[];
     }
-    const normalized = this.normalizeSql(sql, true);
-    const stmt = this.db.prepare(normalized);
-    return stmt.all(...safeParams) as T[];
+    const stmt = this.db.prepare(normalizedSql);
+    return stmt.all(...orderedParams) as T[];
   }
 
   async queryOne<T = unknown>(sql: string, params?: unknown[]): Promise<T | null> {
@@ -58,13 +61,12 @@ class SqliteAdapter implements IDatabase {
   }
 
   async execute(sql: string, params?: unknown[]): Promise<void> {
-    const safeParams = this.normalizeParams(params);
-    if (safeParams.length === 0) {
+    const { normalizedSql, orderedParams } = this.prepareSqlAndParams(sql, params);
+    if (orderedParams.length === 0) {
       this.db.exec(sql);
     } else {
-      const normalized = this.normalizeSql(sql, true);
-      const stmt = this.db.prepare(normalized);
-      stmt.run(...safeParams);
+      const stmt = this.db.prepare(normalizedSql);
+      stmt.run(...orderedParams);
     }
   }
 

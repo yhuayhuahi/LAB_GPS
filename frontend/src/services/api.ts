@@ -1,4 +1,15 @@
-import type { ApiResponse, Branch, LoginResponseData, Product, User } from '../types';
+import type {
+  ApiResponse,
+  Branch,
+  CentralStock,
+  Consignment,
+  CriticalStockAlert,
+  InventoryBalanceResponse,
+  LoginResponseData,
+  NonCommercialExit,
+  Product,
+  User
+} from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -10,7 +21,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {})
+    ...((options.headers as Record<string, string>) || {})
   };
 
   if (token) {
@@ -29,6 +40,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     const error = new Error(errorMsg);
     (error as any).code = body?.error?.code;
     (error as any).status = response.status;
+    (error as any).details = body?.error?.details;
     throw error;
   }
 
@@ -58,7 +70,10 @@ export const api = {
         body: JSON.stringify(data)
       }),
     getUsers: (branchId: string) => request<User[]>(`/branches/${branchId}/users`),
-    createUser: (branchId: string, userData: { email: string; password: string; full_name: string; role_id?: string; observations?: string }) =>
+    createUser: (
+      branchId: string,
+      userData: { email: string; password: string; full_name: string; role_id?: string; observations?: string }
+    ) =>
       request<User>(`/branches/${branchId}/users`, {
         method: 'POST',
         body: JSON.stringify(userData)
@@ -77,5 +92,53 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(data)
       })
+  },
+  consignments: {
+    list: (status?: string) =>
+      request<Consignment[]>(`/consignments${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+    getById: (id: string) => request<Consignment>(`/consignments/${id}`),
+    create: (data: {
+      target_branch_id: string;
+      notes?: string;
+      items: { product_id: string; quantity: number }[];
+    }) =>
+      request<Consignment>('/consignments', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      }),
+    confirm: (
+      id: string,
+      data: {
+        notes?: string;
+        items?: { product_id: string; received_quantity: number; discrepancy_notes?: string }[];
+      }
+    ) =>
+      request<Consignment>(`/consignments/${id}/confirm`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      })
+  },
+  inventory: {
+    getBalance: () => request<InventoryBalanceResponse>('/inventory/balance'),
+    getCentralStock: () => request<CentralStock[]>('/inventory/central'),
+    addCentralStock: (data: { product_id: string; quantity: number; notes?: string }) =>
+      request<CentralStock>('/inventory/central/entry', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      }),
+    createNonCommercialExit: (data: {
+      product_id: string;
+      source_type: 'CENTRAL' | 'BRANCH';
+      branch_id?: string | null;
+      movement_type: string;
+      quantity: number;
+      justification: string;
+    }) =>
+      request<NonCommercialExit>('/inventory/non-commercial-exits', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      }),
+    listNonCommercialExits: () => request<NonCommercialExit[]>('/inventory/non-commercial-exits'),
+    getCriticalAlerts: () => request<CriticalStockAlert[]>('/inventory/critical-alerts')
   }
 };

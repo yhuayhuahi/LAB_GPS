@@ -6,10 +6,10 @@ import { app } from '../app';
 let server: http.Server;
 let baseUrl: string;
 
-const runSuffix = Date.now().toString().slice(-6);
+const runSuffix = `${Date.now().toString().slice(-4)}${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
 const branchCodeA = `TRILCE-${runSuffix}`;
 const branchCodeB = `SIGLOXX-${runSuffix}`;
-const sellerEmail = `vendedor.${runSuffix}@editorialqsy.com`;
+const sellerEmail = `vendedor.${runSuffix.toLowerCase()}@editorialqsy.com`;
 const productCode = `QSY-BAS-${runSuffix}`;
 
 let adminToken = '';

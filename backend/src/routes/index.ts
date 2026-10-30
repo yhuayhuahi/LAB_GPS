@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { env } from '../config/env';
 import authRoutes from './auth.routes';
 import branchRoutes from './branch.routes';
+import consignmentRoutes from './consignment.routes';
+import inventoryRoutes from './inventory.routes';
 import productRoutes from './product.routes';
 
 const router = Router();
@@ -27,9 +29,11 @@ router.get('/app-version', (_req, res) => {
   });
 });
 
-// Rutas funcionales de la API
+// Rutas funcionales de la API (Sprint 1 + Sprint 2)
 router.use('/auth', authRoutes);
 router.use('/branches', branchRoutes);
 router.use('/products', productRoutes);
+router.use('/consignments', consignmentRoutes);
+router.use('/inventory', inventoryRoutes);
 
 export default router;

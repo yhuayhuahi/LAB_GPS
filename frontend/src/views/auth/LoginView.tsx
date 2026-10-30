@@ -29,15 +29,15 @@ export const LoginView: React.FC = () => {
     }
   };
 
-  const handleFillDemoAdmin = () => {
-    setEmail('admin@editorialqsy.com');
+  const handleFillDemo = (demoEmail: string) => {
+    setEmail(demoEmail);
     setPassword('Admin123!');
     setErrorMsg(null);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-slate-50">
-      <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8">
+      <div className="w-full max-w-[440px] bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8">
         {/* Cabecera institucional */}
         <div className="text-center mb-6">
           <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-extrabold text-2xl mx-auto mb-3 shadow-md">
@@ -116,16 +116,36 @@ export const LoginView: React.FC = () => {
           </button>
         </form>
 
-        {/* Acceso Rápido Demo para Evaluación */}
+        {/* Acceso Rápido Demo para Evaluación (Sprint 1 + Sprint 2) */}
         <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-          <p className="text-xs text-slate-400 mb-2">Credenciales maestras para pruebas:</p>
-          <button
-            type="button"
-            onClick={handleFillDemoAdmin}
-            className="text-xs font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 py-1.5 px-3 rounded-lg transition-colors cursor-pointer"
-          >
-            Usar cuenta Administrador Demo
-          </button>
+          <p className="text-xs text-slate-500 font-semibold mb-2">Accesos Demo por Rol (Sprint 1 y 2):</p>
+          <div className="flex flex-col gap-1.5">
+            <button
+              type="button"
+              onClick={() => handleFillDemo('admin@editorialqsy.com')}
+              className="text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 py-1.5 px-3 rounded-lg transition-colors cursor-pointer text-left flex justify-between items-center"
+            >
+              <span>👑 Administrador General</span>
+              <span className="text-2xs text-purple-500 font-mono">admin@editorialqsy.com</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFillDemo('logistica@editorialqsy.com')}
+              className="text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 py-1.5 px-3 rounded-lg transition-colors cursor-pointer text-left flex justify-between items-center"
+            >
+              <span>📦 Encargado de Logística</span>
+              <span className="text-2xs text-blue-500 font-mono">logistica@editorialqsy.com</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFillDemo('distribuidor.trilce@editorialqsy.com')}
+              className="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 py-1.5 px-3 rounded-lg transition-colors cursor-pointer text-left flex justify-between items-center"
+            >
+              <span>🏪 Distribuidor Trilce (RN-05)</span>
+              <span className="text-2xs text-emerald-500 font-mono">distribuidor.trilce@...</span>
+            </button>
+          </div>
+          <p className="text-2xs text-slate-400 mt-2 font-mono">Clave demo universal: Admin123!</p>
         </div>
       </div>
     </div>
