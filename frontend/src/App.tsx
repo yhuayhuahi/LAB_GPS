@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { OfflineBanner } from './components/common/OfflineBanner';
 import { Navbar } from './components/common/Navbar';
@@ -15,6 +15,12 @@ const MainApp: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>(
     user?.role === 'DISTRIBUTOR' ? 'sales' : 'branches'
   );
+
+  useEffect(() => {
+    if (user?.role === 'DISTRIBUTOR') setCurrentTab('sales');
+    if (user?.role === 'LOGISTICS') setCurrentTab('inventory');
+    if (user?.role === 'ADMIN') setCurrentTab('branches');
+  }, [user?.role]);
 
   if (isLoading) {
     return (

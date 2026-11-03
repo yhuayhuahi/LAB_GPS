@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
     }
   };
 
-  const isAdmin = user?.role === 'ADMIN';
+  const isManagement = user?.role === 'ADMIN' || user?.role === 'LOGISTICS';
 
   return (
     <header className="bg-white border-b border-slate-200 shadow-xs sticky top-0 z-40">
@@ -71,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 <ShoppingCart className="w-4 h-4" /><span>Vender</span>
               </button>
             )}
-            {isAdmin && (
+            {isManagement && (
               <button
                 onClick={() => onSelectTab('branches')}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -85,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               </button>
             )}
 
-            <button
+            {isManagement && <button
               onClick={() => onSelectTab('products')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 currentTab === 'products'
@@ -95,7 +95,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
             >
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">Catálogo</span>
-            </button>
+            </button>}
 
             <button
               onClick={() => onSelectTab('inventory')}
