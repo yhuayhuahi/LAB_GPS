@@ -20,12 +20,12 @@ after(() => server.close());
 describe('Sprint 3 - ventas móviles', () => {
   it('registra una venta, es idempotente y bloquea sobreventa', async () => {
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
-    const body = { client_sale_uuid: saleUuid, customer_name: 'Prueba Sprint Tres', customer_dni: '87654321', payment_method: 'YAPE', items: [{ product_id: 'prod-04', quantity: 1 }] };
+    const body = { client_sale_uuid: saleUuid, customer_name: 'Prueba Sprint Tres', customer_dni: '87654321', payment_method: 'YAPE', items: [{ product_id: 'prod-qsy-bas', quantity: 1 }] };
     const first = await fetch(`${baseUrl}/sales`, { method: 'POST', headers, body: JSON.stringify(body) });
     assert.equal(first.status, 201); saleId = ((await first.json()) as any).data.id;
     const replay = await fetch(`${baseUrl}/sales`, { method: 'POST', headers, body: JSON.stringify(body) });
     assert.equal(((await replay.json()) as any).data.id, saleId);
-    const excess = await fetch(`${baseUrl}/sales`, { method: 'POST', headers, body: JSON.stringify({ ...body, client_sale_uuid: randomUUID(), items: [{ product_id: 'prod-04', quantity: 999 }] }) });
+    const excess = await fetch(`${baseUrl}/sales`, { method: 'POST', headers, body: JSON.stringify({ ...body, client_sale_uuid: randomUUID(), items: [{ product_id: 'prod-qsy-bas', quantity: 999 }] }) });
     assert.equal(excess.status, 400);
   });
 

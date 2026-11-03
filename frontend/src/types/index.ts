@@ -26,6 +26,7 @@ export interface Branch {
 export interface Product {
   id: string;
   code: string;
+  category_code: 'QSY' | 'PK' | 'KUSI';
   title: string;
   education_level: string;
   isbn?: string | null;

@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS products (
     id VARCHAR(36) PRIMARY KEY,
     code VARCHAR(30) NOT NULL UNIQUE,          -- Código asignado por el admin (ej. 'QSY-BAS-01')
+    category_code VARCHAR(10) NOT NULL DEFAULT 'QSY' CHECK (category_code IN ('QSY', 'PK', 'KUSI')),
     title VARCHAR(150) NOT NULL,
     education_level VARCHAR(50) NOT NULL,      -- 'Básico', 'Intermedio', 'Avanzado', 'Especializado', etc.
     isbn VARCHAR(30),

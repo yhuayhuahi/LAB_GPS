@@ -31,6 +31,13 @@ export async function runMigrations() {
   // Ejecutar script DDL
   await db.execute(sql);
 
+  const productColumns = await db.query<{ name?: string; column_name?: string }>(
+    `SELECT column_name FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'category_code'`
+  ).catch(async () => db.query<{ name: string }>('PRAGMA table_info(products)'));
+  if (!productColumns.some((column) => (column.name ?? (column as { column_name?: string }).column_name) === 'category_code')) {
+    await db.execute(`ALTER TABLE products ADD COLUMN category_code VARCHAR(10) NOT NULL DEFAULT 'QSY'`);
+  }
+
   // Verificar tablas creadas
   const roles = await db.query<{ count: string | number }>('SELECT count(*) as count FROM roles;');
   const users = await db.query<{ count: string | number }>('SELECT count(*) as count FROM users;');

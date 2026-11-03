@@ -71,6 +71,21 @@ export async function seedDemoData() {
   `);
 
   console.log('✅ Base de datos poblada exitosamente con datos representativos de Editorial QSY.');
+  // Catálogo comercial vigente: las categorías son independientes y no se mezclan.
+  await db.execute(`
+    UPDATE products SET is_active = 0 WHERE id IN ('prod-01', 'prod-02', 'prod-03', 'prod-04', 'prod-05');
+    INSERT INTO products (id, code, category_code, title, education_level, public_price, fixed_commission, observations, is_active) VALUES
+      ('prod-qsy-bas', 'QSY-BAS', 'QSY', 'QSY Básico', 'Básico', 89, 0, 'Categoría QSY', 1), ('prod-qsy-int', 'QSY-INT', 'QSY', 'QSY Intermedio', 'Intermedio', 89, 0, 'Categoría QSY', 1), ('prod-qsy-avn', 'QSY-AVN', 'QSY', 'QSY Avanzado', 'Avanzado', 89, 0, 'Categoría QSY', 1), ('prod-qsy-dic', 'QSY-DIC', 'QSY', 'Diccionario QSY', 'Diccionario', 25, 0, 'Categoría QSY', 1),
+      ('prod-pk-bas', 'PK-BAS', 'PK', 'PK Básico', 'Básico', 89, 0, 'Categoría PK', 1), ('prod-pk-int', 'PK-INT', 'PK', 'PK Intermedio', 'Intermedio', 89, 0, 'Categoría PK', 1), ('prod-pk-avn', 'PK-AVN', 'PK', 'PK Avanzado', 'Avanzado', 89, 0, 'Categoría PK', 1),
+      ('prod-kusi-bas', 'KUSI-BAS', 'KUSI', 'Kusi Básico', 'Básico', 89, 0, 'Categoría Kusi', 1), ('prod-kusi-int', 'KUSI-INT', 'KUSI', 'Kusi Intermedio', 'Intermedio', 89, 0, 'Categoría Kusi', 1), ('prod-kusi-avn', 'KUSI-AVN', 'KUSI', 'Kusi Avanzado', 'Avanzado', 89, 0, 'Categoría Kusi', 1)
+    ON CONFLICT (id) DO UPDATE SET category_code = EXCLUDED.category_code, title = EXCLUDED.title, education_level = EXCLUDED.education_level, public_price = EXCLUDED.public_price, fixed_commission = EXCLUDED.fixed_commission, is_active = 1;
+    INSERT INTO central_stock (id, product_id, current_quantity, min_critical_stock, updated_at) VALUES
+      ('cstock-qsy-bas', 'prod-qsy-bas', 25, 5, CURRENT_TIMESTAMP), ('cstock-qsy-int', 'prod-qsy-int', 25, 5, CURRENT_TIMESTAMP), ('cstock-qsy-avn', 'prod-qsy-avn', 25, 5, CURRENT_TIMESTAMP), ('cstock-qsy-dic', 'prod-qsy-dic', 25, 5, CURRENT_TIMESTAMP), ('cstock-pk-bas', 'prod-pk-bas', 25, 5, CURRENT_TIMESTAMP), ('cstock-pk-int', 'prod-pk-int', 25, 5, CURRENT_TIMESTAMP), ('cstock-pk-avn', 'prod-pk-avn', 25, 5, CURRENT_TIMESTAMP), ('cstock-kusi-bas', 'prod-kusi-bas', 25, 5, CURRENT_TIMESTAMP), ('cstock-kusi-int', 'prod-kusi-int', 25, 5, CURRENT_TIMESTAMP), ('cstock-kusi-avn', 'prod-kusi-avn', 25, 5, CURRENT_TIMESTAMP)
+    ON CONFLICT (product_id) DO UPDATE SET current_quantity = EXCLUDED.current_quantity;
+    INSERT INTO branch_stock (id, branch_id, product_id, received_quantity, sold_quantity, available_quantity, updated_at) VALUES
+      ('bstock-qsy-bas', 'branch-01', 'prod-qsy-bas', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-qsy-int', 'branch-01', 'prod-qsy-int', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-qsy-avn', 'branch-01', 'prod-qsy-avn', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-qsy-dic', 'branch-01', 'prod-qsy-dic', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-pk-bas', 'branch-01', 'prod-pk-bas', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-pk-int', 'branch-01', 'prod-pk-int', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-pk-avn', 'branch-01', 'prod-pk-avn', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-kusi-bas', 'branch-01', 'prod-kusi-bas', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-kusi-int', 'branch-01', 'prod-kusi-int', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-kusi-avn', 'branch-01', 'prod-kusi-avn', 8, 0, 8, CURRENT_TIMESTAMP)
+    ON CONFLICT (branch_id, product_id) DO UPDATE SET received_quantity = EXCLUDED.received_quantity, available_quantity = EXCLUDED.available_quantity;
+  `);
 }
 
 if (require.main === module) {

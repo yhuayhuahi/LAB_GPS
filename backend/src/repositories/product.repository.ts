@@ -4,7 +4,7 @@ import { Product } from '../types/domain';
 export class ProductRepository {
   async findAll(activeOnly = true): Promise<Product[]> {
     let sql = `
-      SELECT id, code, title, education_level, isbn, public_price, fixed_commission, observations, is_active, created_at
+      SELECT id, code, category_code, title, education_level, isbn, public_price, fixed_commission, observations, is_active, created_at
       FROM products
     `;
     if (activeOnly) {
@@ -17,7 +17,7 @@ export class ProductRepository {
 
   async findById(id: string): Promise<Product | null> {
     const sql = `
-      SELECT id, code, title, education_level, isbn, public_price, fixed_commission, observations, is_active, created_at
+      SELECT id, code, category_code, title, education_level, isbn, public_price, fixed_commission, observations, is_active, created_at
       FROM products
       WHERE id = $1;
     `;
@@ -26,7 +26,7 @@ export class ProductRepository {
 
   async findByCode(code: string): Promise<Product | null> {
     const sql = `
-      SELECT id, code, title, education_level, isbn, public_price, fixed_commission, observations, is_active, created_at
+      SELECT id, code, category_code, title, education_level, isbn, public_price, fixed_commission, observations, is_active, created_at
       FROM products
       WHERE UPPER(code) = UPPER($1);
     `;
@@ -35,12 +35,13 @@ export class ProductRepository {
 
   async create(product: Omit<Product, 'created_at'>): Promise<Product> {
     const sql = `
-      INSERT INTO products (id, code, title, education_level, isbn, public_price, fixed_commission, observations, is_active)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+      INSERT INTO products (id, code, category_code, title, education_level, isbn, public_price, fixed_commission, observations, is_active)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
     `;
     await db.execute(sql, [
       product.id,
       product.code.toUpperCase(),
+      product.category_code,
       product.title,
       product.education_level,
       product.isbn ?? null,
@@ -59,6 +60,7 @@ export class ProductRepository {
 
     const updated = {
       title: product.title ?? existing.title,
+      category_code: product.category_code ?? existing.category_code,
       education_level: product.education_level ?? existing.education_level,
       isbn: product.isbn !== undefined ? product.isbn : existing.isbn,
       public_price: product.public_price !== undefined ? product.public_price : existing.public_price,
@@ -69,11 +71,12 @@ export class ProductRepository {
 
     const sql = `
       UPDATE products 
-      SET title = $1, education_level = $2, isbn = $3, public_price = $4, fixed_commission = $5, observations = $6, is_active = $7
-      WHERE id = $8;
+      SET title = $1, category_code = $2, education_level = $3, isbn = $4, public_price = $5, fixed_commission = $6, observations = $7, is_active = $8
+      WHERE id = $9;
     `;
     await db.execute(sql, [
       updated.title,
+      updated.category_code,
       updated.education_level,
       updated.isbn,
       updated.public_price,

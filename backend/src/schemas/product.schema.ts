@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const createProductSchema = z.object({
+  category_code: z.enum(['QSY', 'PK', 'KUSI']).default('QSY'),
   code: z
     .string()
     .min(3, 'El código debe tener al menos 3 caracteres')
@@ -18,6 +19,7 @@ export const createProductSchema = z.object({
 });
 
 export const updateProductSchema = z.object({
+  category_code: z.enum(['QSY', 'PK', 'KUSI']).optional(),
   code: z.string().min(3).max(30).optional(),
   title: z.string().min(3).max(150).optional(),
   education_level: z.string().min(2).max(50).optional(),

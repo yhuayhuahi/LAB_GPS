@@ -29,6 +29,7 @@ export class ProductService {
     const newProduct: Omit<Product, 'created_at'> = {
       id: `prod-${crypto.randomUUID()}`,
       code: input.code.toUpperCase(),
+      category_code: input.category_code,
       title: input.title,
       education_level: input.education_level,
       isbn: input.isbn,
