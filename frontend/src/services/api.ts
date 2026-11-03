@@ -8,6 +8,7 @@ import type {
   LoginResponseData,
   NonCommercialExit,
   Product,
+  Sale,
   User
 } from '../types';
 
@@ -140,5 +141,9 @@ export const api = {
       }),
     listNonCommercialExits: () => request<NonCommercialExit[]>('/inventory/non-commercial-exits'),
     getCriticalAlerts: () => request<CriticalStockAlert[]>('/inventory/critical-alerts')
+  },
+  sales: {
+    create: (data: { client_sale_uuid: string; customer_dni?: string; customer_name: string; payment_method: 'EFECTIVO' | 'YAPE'; is_offline_sync?: boolean; items: { product_id: string; quantity: number }[] }) =>
+      request<Sale>('/sales', { method: 'POST', body: JSON.stringify(data) })
   }
 };

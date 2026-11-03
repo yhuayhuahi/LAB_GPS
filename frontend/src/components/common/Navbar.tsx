@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { BookOpen, Building2, Layers, LogOut, Truck, UserCircle } from 'lucide-react';
+import { BookOpen, Building2, Layers, LogOut, ShoppingCart, Truck, UserCircle } from 'lucide-react';
 
-export type NavTab = 'branches' | 'products' | 'inventory' | 'consignments';
+export type NavTab = 'branches' | 'products' | 'inventory' | 'consignments' | 'sales';
 
 interface NavbarProps {
   currentTab: NavTab;
@@ -66,6 +66,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
 
           {/* Navegación central (Sprint 1 + Sprint 2) */}
           <nav className="flex space-x-1 sm:space-x-2">
+            {user?.role === 'DISTRIBUTOR' && (
+              <button onClick={() => onSelectTab('sales')} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentTab === 'sales' ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}>
+                <ShoppingCart className="w-4 h-4" /><span>Vender</span>
+              </button>
+            )}
             {isAdmin && (
               <button
                 onClick={() => onSelectTab('branches')}

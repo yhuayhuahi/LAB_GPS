@@ -172,3 +172,7 @@ export interface LoginResponseData {
   token: string;
   user: User;
 }
+
+export type PaymentMethod = 'EFECTIVO' | 'YAPE';
+export interface SaleItem { id: string; product_id: string; product_title?: string; quantity: number; unit_price: number; subtotal: number; }
+export interface Sale { id: string; client_sale_uuid: string; customer_dni: string; customer_name: string; payment_method: PaymentMethod; total_amount: number; status: 'CONFIRMED' | 'ANNULLED'; is_offline_sync: boolean; created_at: string; items: SaleItem[]; }

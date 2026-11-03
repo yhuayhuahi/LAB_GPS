@@ -8,11 +8,12 @@ import { BranchesView } from './views/admin/BranchesView';
 import { ProductsView } from './views/admin/ProductsView';
 import { InventoryView } from './views/inventory/InventoryView';
 import { ConsignmentsView } from './views/consignments/ConsignmentsView';
+import { SalesView } from './views/sales/SalesView';
 
 const MainApp: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [currentTab, setCurrentTab] = useState<NavTab>(
-    user?.role === 'DISTRIBUTOR' ? 'inventory' : 'branches'
+    user?.role === 'DISTRIBUTOR' ? 'sales' : 'branches'
   );
 
   if (isLoading) {
@@ -45,6 +46,8 @@ const MainApp: React.FC = () => {
         return <InventoryView />;
       case 'consignments':
         return <ConsignmentsView />;
+      case 'sales':
+        return <SalesView />;
       default:
         return <InventoryView />;
     }
