@@ -25,7 +25,8 @@ export const SalesView: React.FC = () => {
   const [pending, setPending] = useState<Record<string, number>>({});
 
   const load = async () => {
-    const [catalogue, balance, sales] = await Promise.all([api.products.list(), api.inventory.getBalance(), api.sales.mine()]);
+    // El POS solo ofrece títulos vigentes; el catálogo histórico se conserva para auditoría.
+    const [catalogue, balance, sales] = await Promise.all([api.products.list(false), api.inventory.getBalance(), api.sales.mine()]);
     setProducts(catalogue.filter((product) => (balance.branchStock ?? []).some((row) => row.product_id === product.id)));
     setStock(balance.branchStock ?? []);
     setHistory(sales);
