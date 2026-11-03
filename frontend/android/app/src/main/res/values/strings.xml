@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">QSY Ventas</string>
+    <string name="title_activity_main">QSY Ventas</string>
+    <string name="package_name">com.editorialqsy.ventas</string>
+    <string name="custom_url_scheme">com.editorialqsy.ventas</string>
+</resources>

@@ -12,7 +12,9 @@ import type {
   User
 } from '../types';
 
-const API_BASE = '/api/v1';
+// En navegador usa el proxy de Vite; en la APK se define VITE_API_BASE con la URL
+// pública del VPS o con la IP LAN de la computadora para pruebas físicas.
+const API_BASE = import.meta.env.VITE_API_BASE || '/api/v1';
 
 function getToken(): string | null {
   return localStorage.getItem('qsy_token');
