@@ -27,7 +27,7 @@ export class SaleService {
         commission += Number(stock.fixed_commission) * item.quantity;
       }
       const id = randomUUID();
-      await client.execute(`INSERT INTO sales (id, client_sale_uuid, branch_id, seller_user_id, customer_dni, customer_name, payment_method, total_amount, total_commission, status, is_offline_sync, created_at, synced_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'CONFIRMED',$10,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`, [id, input.client_sale_uuid, user.branch_id, user.id, input.customer_dni ?? 'SIN-DNI', input.customer_name, input.payment_method, total, commission, input.is_offline_sync]);
+      await client.execute(`INSERT INTO sales (id, client_sale_uuid, branch_id, seller_user_id, customer_dni, customer_name, payment_method, total_amount, total_commission, status, is_offline_sync, created_at, synced_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'CONFIRMED',$10,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`, [id, input.client_sale_uuid, user.branch_id, user.id, input.customer_dni, input.customer_name, input.payment_method, total, commission, input.is_offline_sync]);
       for (let index = 0; index < input.items.length; index++) {
         const item = input.items[index]; const product = prepared[index].product; const qty = item.quantity;
         await client.execute('UPDATE branch_stock SET available_quantity = available_quantity - $1, sold_quantity = sold_quantity + $1, updated_at = CURRENT_TIMESTAMP WHERE branch_id = $2 AND product_id = $3', [qty, user.branch_id, item.product_id]);

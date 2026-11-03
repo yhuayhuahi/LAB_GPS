@@ -47,7 +47,7 @@ export type NonCommercialExitInput = z.infer<typeof nonCommercialExitSchema>;
 
 export const createSaleSchema = z.object({
   client_sale_uuid: z.string().uuid('El identificador local de la venta debe ser un UUID válido'),
-  customer_dni: z.string().trim().regex(/^\d{8}$/, 'El DNI debe tener 8 dígitos').optional(),
+  customer_dni: z.string().trim().regex(/^\d{8}$/, 'El DNI es obligatorio y debe tener 8 dígitos'),
   customer_name: z.string().trim().min(2, 'Ingrese el nombre del comprador').max(120),
   payment_method: z.enum(['EFECTIVO', 'YAPE']),
   is_offline_sync: z.boolean().optional().default(false),
