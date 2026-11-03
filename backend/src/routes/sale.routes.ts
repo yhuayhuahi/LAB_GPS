@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { createSale } from '../controllers/sale.controller';
+import { authenticate } from '../middlewares/auth.middleware';
+import { requireRoles } from '../middlewares/rbac.middleware';
+import { validateBody } from '../middlewares/validate.middleware';
+import { createSaleSchema } from '../schemas/inventory.schema';
+const router = Router();
+router.use(authenticate);
+router.post('/', requireRoles('DISTRIBUTOR'), validateBody(createSaleSchema), createSale);
+export default router;

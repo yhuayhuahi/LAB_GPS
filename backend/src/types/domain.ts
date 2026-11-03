@@ -167,3 +167,33 @@ export interface GlobalInventoryMatrixRow {
   total_available: number;
   is_central_critical: boolean;
 }
+
+// ============================================================================
+// SPRINT 3: VENTAS EN MOSTRADOR
+// ============================================================================
+export type PaymentMethod = 'EFECTIVO' | 'YAPE';
+export type SaleStatus = 'CONFIRMED' | 'ANNULLED';
+
+export interface SaleItem {
+  id: string;
+  product_id: string;
+  product_title?: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+export interface Sale {
+  id: string;
+  client_sale_uuid: string;
+  branch_id: string;
+  seller_user_id: string;
+  customer_dni: string;
+  customer_name: string;
+  payment_method: PaymentMethod;
+  total_amount: number;
+  status: SaleStatus;
+  is_offline_sync: boolean;
+  created_at: string;
+  items: SaleItem[];
+}
