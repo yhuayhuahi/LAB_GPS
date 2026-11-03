@@ -1,10 +1,13 @@
 import { Router } from 'express';
-import { createSale } from '../controllers/sale.controller';
+import { annulSale, createSale, downloadTicket, listMySales } from '../controllers/sale.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import { requireRoles } from '../middlewares/rbac.middleware';
 import { validateBody } from '../middlewares/validate.middleware';
-import { createSaleSchema } from '../schemas/inventory.schema';
+import { annulSaleSchema, createSaleSchema } from '../schemas/inventory.schema';
 const router = Router();
 router.use(authenticate);
 router.post('/', requireRoles('DISTRIBUTOR'), validateBody(createSaleSchema), createSale);
+router.get('/mine', requireRoles('DISTRIBUTOR'), listMySales);
+router.get('/:id/ticket', requireRoles('DISTRIBUTOR'), downloadTicket);
+router.put('/:id/annul', requireRoles('DISTRIBUTOR'), validateBody(annulSaleSchema), annulSale);
 export default router;

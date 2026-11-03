@@ -36,5 +36,39 @@ export class SaleService {
       return mapSale(client, id);
     });
   }
+
+  async listMine(user: AuthUser): Promise<Sale[]> {
+    if (!user.branch_id) throw AppError.forbidden('El vendedor no tiene sede asignada', 'SALE_BRANCH_REQUIRED');
+    const rows = await db.query<any>(`SELECT id FROM sales WHERE branch_id = $1 ORDER BY created_at DESC LIMIT 50`, [user.branch_id]);
+    return Promise.all(rows.map((row) => mapSale(db, row.id)));
+  }
+
+  async annul(saleId: string, justification: string, user: AuthUser): Promise<Sale> {
+    if (!user.branch_id) throw AppError.forbidden('El vendedor no tiene sede asignada', 'SALE_BRANCH_REQUIRED');
+    return db.transaction(async (client) => {
+      const sale = await client.queryOne<any>('SELECT * FROM sales WHERE id = $1 AND branch_id = $2', [saleId, user.branch_id]);
+      if (!sale) throw AppError.notFound('La venta no pertenece a su sede', 'SALE_NOT_FOUND');
+      if (sale.status === 'ANNULLED') throw AppError.conflict('Esta venta ya fue anulada', 'SALE_ALREADY_ANNULLED');
+      const items = await client.query<any>('SELECT product_id, quantity FROM sale_items WHERE sale_id = $1', [saleId]);
+      for (const item of items) await client.execute('UPDATE branch_stock SET available_quantity = available_quantity + $1, sold_quantity = sold_quantity - $1, updated_at = CURRENT_TIMESTAMP WHERE branch_id = $2 AND product_id = $3', [Number(item.quantity), user.branch_id, item.product_id]);
+      await client.execute(`UPDATE sales SET status = 'ANNULLED', observations = $1 WHERE id = $2`, [`ANULADA: ${justification.trim()}`, saleId]);
+      return mapSale(client, saleId);
+    });
+  }
+
+  async ticket(saleId: string, user: AuthUser): Promise<Buffer> {
+    if (!user.branch_id) throw AppError.forbidden('El vendedor no tiene sede asignada', 'SALE_BRANCH_REQUIRED');
+    const sale = await db.queryOne<any>(`SELECT s.*, b.name AS branch_name FROM sales s JOIN branches b ON b.id = s.branch_id WHERE s.id = $1 AND s.branch_id = $2`, [saleId, user.branch_id]);
+    if (!sale) throw AppError.notFound('Venta no encontrada', 'SALE_NOT_FOUND');
+    const items = await db.query<any>(`SELECT p.title, si.quantity, si.unit_price, si.subtotal FROM sale_items si JOIN products p ON p.id = si.product_id WHERE si.sale_id = $1`, [saleId]);
+    const safe = (text: unknown) => String(text).replace(/[()\\]/g, '\\$&').replace(/[^\x20-\x7E]/g, '?');
+    const lines = ['QSY - COMPROBANTE INTERNO', `Operacion: ${sale.id}`, `Fecha: ${sale.created_at}`, `Sede: ${sale.branch_name}`, `Cliente: ${sale.customer_name}`, `DNI: ${sale.customer_dni}`, `Pago: ${sale.payment_method}`, '--- Detalle ---', ...items.map((item) => `${item.quantity} x ${item.title}  S/ ${Number(item.subtotal).toFixed(2)}`), `TOTAL: S/ ${Number(sale.total_amount).toFixed(2)}`, 'Gracias por su compra.'];
+    const stream = `BT /F1 11 Tf 50 790 Td ${lines.map((line, index) => `${index ? '0 -18 Td ' : ''}(${safe(line)}) Tj`).join(' ')} ET`;
+    const objects = [`<< /Type /Catalog /Pages 2 0 R >>`, `<< /Type /Pages /Kids [3 0 R] /Count 1 >>`, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 360 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>`, `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`, `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`];
+    let pdf = '%PDF-1.4\n'; const offsets = [0];
+    objects.forEach((object, index) => { offsets.push(Buffer.byteLength(pdf)); pdf += `${index + 1} 0 obj\n${object}\nendobj\n`; });
+    const xref = Buffer.byteLength(pdf); pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.slice(1).map((offset) => `${String(offset).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    return Buffer.from(pdf, 'utf8');
+  }
 }
 export const saleService = new SaleService();

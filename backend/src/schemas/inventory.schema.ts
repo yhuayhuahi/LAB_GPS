@@ -59,3 +59,7 @@ export const createSaleSchema = z.object({
 
 export type CreateSaleInput = z.infer<typeof createSaleSchema>;
 
+export const annulSaleSchema = z.object({
+  justification: z.string().trim().min(5, 'La justificación debe tener al menos 5 caracteres')
+});
+

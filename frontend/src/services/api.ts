@@ -18,6 +18,12 @@ function getToken(): string | null {
   return localStorage.getItem('qsy_token');
 }
 
+async function downloadTicket(id: string): Promise<Blob> {
+  const response = await fetch(`${API_BASE}/sales/${id}/ticket`, { headers: { Authorization: `Bearer ${getToken()}` } });
+  if (!response.ok) throw new Error('No se pudo generar el comprobante PDF');
+  return response.blob();
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -144,6 +150,9 @@ export const api = {
   },
   sales: {
     create: (data: { client_sale_uuid: string; customer_dni?: string; customer_name: string; payment_method: 'EFECTIVO' | 'YAPE'; is_offline_sync?: boolean; items: { product_id: string; quantity: number }[] }) =>
-      request<Sale>('/sales', { method: 'POST', body: JSON.stringify(data) })
+      request<Sale>('/sales', { method: 'POST', body: JSON.stringify(data) }),
+    mine: () => request<Sale[]>('/sales/mine'),
+    annul: (id: string, justification: string) => request<Sale>(`/sales/${id}/annul`, { method: 'PUT', body: JSON.stringify({ justification }) }),
+    ticket: downloadTicket
   }
 };
