@@ -200,6 +200,79 @@ CREATE TABLE IF NOT EXISTS daily_settlements (
     UNIQUE (branch_id, settlement_date)
 );
 
+-- ------------------------------------------------------------------------------
+-- 11. TABLA: REPLENISHMENT_REQUESTS (HU-13: Solicitudes de Reabastecimiento)
+--     Cabecera de la solicitud formal enviada por el distribuidor a Logística.
+--     RN-05: cada solicitud queda asociada exclusivamente a la sede solicitante.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS replenishment_requests (
+    id VARCHAR(36) PRIMARY KEY,
+    request_code VARCHAR(30) NOT NULL UNIQUE,      -- 'REP-2026-0001'
+    branch_id VARCHAR(36) NOT NULL,                -- Sede solicitante (tomada del usuario autenticado)
+    requested_by_user_id VARCHAR(36) NOT NULL,     -- Distribuidor que envía el pedido
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'COMPLETED')),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP,
+    completed_by_user_id VARCHAR(36),              -- Logística que registró la entrega (HU-14)
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE RESTRICT,
+    FOREIGN KEY (requested_by_user_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (completed_by_user_id) REFERENCES users(id) ON DELETE RESTRICT
+);
+
+-- ------------------------------------------------------------------------------
+-- 12. TABLA: REPLENISHMENT_REQUEST_ITEMS (HU-13/HU-14: Detalle por título)
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS replenishment_request_items (
+    id VARCHAR(36) PRIMARY KEY,
+    request_id VARCHAR(36) NOT NULL,
+    product_id VARCHAR(36) NOT NULL,
+    requested_quantity INTEGER NOT NULL CHECK (requested_quantity > 0),  -- Entero mayor que cero
+    delivered_quantity INTEGER NOT NULL DEFAULT 0 CHECK (delivered_quantity >= 0),
+    FOREIGN KEY (request_id) REFERENCES replenishment_requests(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
+    UNIQUE (request_id, product_id)
+);
+
+-- ------------------------------------------------------------------------------
+-- 13. TABLA: INVENTORY_MOVEMENTS (HU-14: Trazabilidad de movimientos de reposición)
+--     Cada entrega genera una salida del almacén central y una entrada a la sede.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS inventory_movements (
+    id VARCHAR(36) PRIMARY KEY,
+    product_id VARCHAR(36) NOT NULL,
+    movement_type VARCHAR(30) NOT NULL CHECK (movement_type IN ('REPLENISHMENT_OUT', 'REPLENISHMENT_IN')),
+    location_type VARCHAR(20) NOT NULL CHECK (location_type IN ('CENTRAL', 'BRANCH')),
+    branch_id VARCHAR(36),                         -- NULL si la ubicación es el Almacén Central
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    replenishment_request_id VARCHAR(36) NOT NULL,
+    performed_by_user_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE RESTRICT,
+    FOREIGN KEY (replenishment_request_id) REFERENCES replenishment_requests(id) ON DELETE RESTRICT,
+    FOREIGN KEY (performed_by_user_id) REFERENCES users(id) ON DELETE RESTRICT
+);
+
+-- ------------------------------------------------------------------------------
+-- 14. TABLA: NOTIFICATIONS (HU-13: Notificaciones internas simples del MVP)
+--     target_role = rol destinatario; target_branch_id = sede destinataria (opcional).
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS notifications (
+    id VARCHAR(36) PRIMARY KEY,
+    target_role VARCHAR(30) NOT NULL,              -- 'LOGISTICS', 'DISTRIBUTOR'
+    target_branch_id VARCHAR(36),
+    type VARCHAR(40) NOT NULL,                     -- 'REPLENISHMENT_REQUESTED', 'REPLENISHMENT_COMPLETED'
+    title VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    replenishment_request_id VARCHAR(36),
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read_at TIMESTAMP,
+    FOREIGN KEY (target_branch_id) REFERENCES branches(id) ON DELETE RESTRICT,
+    FOREIGN KEY (replenishment_request_id) REFERENCES replenishment_requests(id) ON DELETE CASCADE
+);
+
 -- ==============================================================================
 -- ÍNDICES DE RENDIMIENTO Y AISLAMIENTO DE DATOS MULTI-SEDE
 -- ==============================================================================
@@ -213,6 +286,11 @@ CREATE INDEX IF NOT EXISTS idx_sales_customer_dni ON sales(customer_dni);
 CREATE INDEX IF NOT EXISTS idx_sales_sync_uuid ON sales(client_sale_uuid);
 CREATE INDEX IF NOT EXISTS idx_consignments_branch ON consignments(target_branch_id, status);
 CREATE INDEX IF NOT EXISTS idx_settlements_branch_date ON daily_settlements(branch_id, settlement_date);
+CREATE INDEX IF NOT EXISTS idx_repl_requests_branch_status ON replenishment_requests(branch_id, status);
+CREATE INDEX IF NOT EXISTS idx_repl_items_request ON replenishment_request_items(request_id);
+CREATE INDEX IF NOT EXISTS idx_inv_movements_request ON inventory_movements(replenishment_request_id);
+CREATE INDEX IF NOT EXISTS idx_inv_movements_branch_prod ON inventory_movements(branch_id, product_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_target ON notifications(target_role, target_branch_id, is_read);
 
 -- ==============================================================================
 -- DATOS SEMILLA BASE INICIALES (MÍNIMOS NECESARIOS)
