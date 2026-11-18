@@ -198,3 +198,76 @@ export interface Sale {
   created_at: string;
   items: SaleItem[];
 }
+
+// ============================================================================
+// SPRINT 4: REABASTECIMIENTO (HU-13 / HU-14)
+// ============================================================================
+export type ReplenishmentStatus = 'PENDING' | 'COMPLETED';
+
+export interface ReplenishmentItem {
+  id: string;
+  request_id: string;
+  product_id: string;
+  product_title?: string;
+  product_code?: string;
+  requested_quantity: number;
+  delivered_quantity: number;
+  // HU-14 (solo Logística/Admin): información de apoyo para preparar la entrega
+  insight?: ReplenishmentItemInsight;
+}
+
+export interface ReplenishmentItemInsight {
+  central_available: number; // Existencias actuales en el almacén principal (RN-01)
+  delivered_total: number; // Stock entregado históricamente a la sede (branch_stock.received_quantity)
+  sold_total: number; // Ventas registradas de la sede (branch_stock.sold_quantity)
+  other_exits: number; // Otras salidas (mermas, muestras, cortesías...) = entregado - ventas - saldo
+  current_balance: number; // Saldo actual en mostrador (branch_stock.available_quantity)
+}
+
+export interface InventoryMovement {
+  id: string;
+  product_id: string;
+  product_title?: string;
+  product_code?: string;
+  movement_type: 'REPLENISHMENT_OUT' | 'REPLENISHMENT_IN';
+  location_type: 'CENTRAL' | 'BRANCH';
+  branch_id?: string | null;
+  branch_name?: string | null;
+  quantity: number;
+  replenishment_request_id: string;
+  performed_by_user_id: string;
+  performed_by_name?: string;
+  created_at: string;
+}
+
+export interface ReplenishmentRequest {
+  id: string;
+  request_code: string;
+  branch_id: string;
+  branch_name?: string;
+  requested_by_user_id: string;
+  requested_by_name?: string;
+  status: ReplenishmentStatus;
+  notes?: string | null;
+  created_at: string;
+  completed_at?: string | null;
+  completed_by_user_id?: string | null;
+  completed_by_name?: string | null;
+  items: ReplenishmentItem[];
+  movements?: InventoryMovement[];
+}
+
+export type NotificationType = 'REPLENISHMENT_REQUESTED' | 'REPLENISHMENT_COMPLETED';
+
+export interface AppNotification {
+  id: string;
+  target_role: RoleName;
+  target_branch_id?: string | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  replenishment_request_id?: string | null;
+  is_read: boolean;
+  created_at: string;
+  read_at?: string | null;
+}
