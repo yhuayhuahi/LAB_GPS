@@ -177,3 +177,69 @@ export interface LoginResponseData {
 export type PaymentMethod = 'EFECTIVO' | 'YAPE';
 export interface SaleItem { id: string; product_id: string; product_title?: string; quantity: number; unit_price: number; subtotal: number; }
 export interface Sale { id: string; client_sale_uuid: string; customer_dni: string; customer_name: string; payment_method: PaymentMethod; total_amount: number; status: 'CONFIRMED' | 'ANNULLED'; is_offline_sync: boolean; created_at: string; items: SaleItem[]; }
+
+// ==============================================================================
+// SPRINT 4: REABASTECIMIENTO (HU-13 / HU-14) Y NOTIFICACIONES
+// ==============================================================================
+export type ReplenishmentStatus = 'PENDING' | 'COMPLETED';
+
+export interface ReplenishmentItemInsight {
+  central_available: number;
+  delivered_total: number;
+  sold_total: number;
+  other_exits: number;
+  current_balance: number;
+}
+
+export interface ReplenishmentItem {
+  id: string;
+  request_id: string;
+  product_id: string;
+  product_title?: string;
+  product_code?: string;
+  requested_quantity: number;
+  delivered_quantity: number;
+  insight?: ReplenishmentItemInsight;
+}
+
+export interface InventoryMovement {
+  id: string;
+  product_id: string;
+  product_title?: string;
+  movement_type: 'REPLENISHMENT_OUT' | 'REPLENISHMENT_IN';
+  location_type: 'CENTRAL' | 'BRANCH';
+  branch_name?: string | null;
+  quantity: number;
+  performed_by_name?: string;
+  created_at: string;
+}
+
+export interface ReplenishmentRequest {
+  id: string;
+  request_code: string;
+  branch_id: string;
+  branch_name?: string;
+  requested_by_name?: string;
+  status: ReplenishmentStatus;
+  notes?: string | null;
+  created_at: string;
+  completed_at?: string | null;
+  completed_by_name?: string | null;
+  items: ReplenishmentItem[];
+  movements?: InventoryMovement[];
+}
+
+export interface AppNotification {
+  id: string;
+  type: 'REPLENISHMENT_REQUESTED' | 'REPLENISHMENT_COMPLETED';
+  title: string;
+  message: string;
+  replenishment_request_id?: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface NotificationsResponse {
+  unread: number;
+  notifications: AppNotification[];
+}

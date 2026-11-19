@@ -2,12 +2,15 @@ import type {
   ApiResponse,
   Branch,
   CentralStock,
+  AppNotification,
   Consignment,
   CriticalStockAlert,
   InventoryBalanceResponse,
   LoginResponseData,
   NonCommercialExit,
+  NotificationsResponse,
   Product,
+  ReplenishmentRequest,
   Sale,
   User
 } from '../types';
@@ -156,5 +159,20 @@ export const api = {
     mine: () => request<Sale[]>('/sales/mine'),
     annul: (id: string, justification: string) => request<Sale>(`/sales/${id}/annul`, { method: 'PUT', body: JSON.stringify({ justification }) }),
     ticket: downloadTicket
+  },
+  // Sprint 4: HU-13 / HU-14
+  replenishments: {
+    list: (status?: string) =>
+      request<ReplenishmentRequest[]>(`/replenishments${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+    getById: (id: string) => request<ReplenishmentRequest>(`/replenishments/${id}`),
+    create: (data: { notes?: string; items: { product_id: string; quantity: number }[] }) =>
+      request<ReplenishmentRequest>('/replenishments', { method: 'POST', body: JSON.stringify(data) }),
+    deliver: (id: string, data: { notes?: string; items: { product_id: string; delivered_quantity: number }[] }) =>
+      request<ReplenishmentRequest>(`/replenishments/${id}/deliver`, { method: 'PUT', body: JSON.stringify(data) })
+  },
+  notifications: {
+    list: () => request<NotificationsResponse>('/notifications'),
+    markRead: (id: string) => request<Pick<AppNotification, 'id' | 'is_read'>>(`/notifications/${id}/read`, { method: 'PUT' }),
+    markAllRead: () => request<{ updated: boolean }>('/notifications/read-all', { method: 'PUT' })
   }
 };
