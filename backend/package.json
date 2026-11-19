@@ -10,7 +10,7 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
     "lint": "echo \"No linter configured yet\"",
-    "test": "tsx --test --test-concurrency=1 src/test/integration.test.ts src/test/sprint2.integration.test.ts src/test/sprint3.integration.test.ts"
+    "test": "tsx --test --test-concurrency=1 src/test/integration.test.ts src/test/sprint2.integration.test.ts src/test/sprint3.integration.test.ts src/test/sprint4.integration.test.ts"
   },
   "keywords": [
     "express",
