@@ -274,6 +274,81 @@ CREATE TABLE IF NOT EXISTS notifications (
     FOREIGN KEY (replenishment_request_id) REFERENCES replenishment_requests(id) ON DELETE CASCADE
 );
 
+-- ------------------------------------------------------------------------------
+-- 15. TABLA: LIQUIDATIONS (HU-15: Liquidación por distribuidora y período)
+--     Cabecera de lo que la distribuidora debe entregar a QSY: Bruto - Comisión = Neto.
+--     Los importes quedan congelados al generarse (no dependen del catálogo vigente).
+--     HU-16: paid_amount / pending_amount / status se derivan de LIQUIDATION_PAYMENTS.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS liquidations (
+    id VARCHAR(36) PRIMARY KEY,
+    liquidation_code VARCHAR(30) NOT NULL UNIQUE,   -- 'LIQ-2026-0001'
+    branch_id VARCHAR(36) NOT NULL,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    sales_count INTEGER NOT NULL DEFAULT 0,
+    gross_amount NUMERIC(12, 2) NOT NULL CHECK (gross_amount >= 0),
+    commission_amount NUMERIC(12, 2) NOT NULL CHECK (commission_amount >= 0),
+    net_amount NUMERIC(12, 2) NOT NULL CHECK (net_amount >= 0),
+    paid_amount NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (paid_amount >= 0),
+    pending_amount NUMERIC(12, 2) NOT NULL CHECK (pending_amount >= 0),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'PARTIAL', 'PAID')),
+    due_date DATE NOT NULL,                         -- Vencimiento = fin de período + LIQUIDATION_DUE_DAYS
+    notes TEXT,
+    created_by_user_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE RESTRICT,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE RESTRICT,
+    CHECK (period_end >= period_start)
+);
+
+-- ------------------------------------------------------------------------------
+-- 16. TABLA: LIQUIDATION_ITEMS (HU-15: Desglose por título con precio y comisión congelados)
+--     Una línea por (título, precio, comisión): si el precio cambió entre ventas, se separan.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS liquidation_items (
+    id VARCHAR(36) PRIMARY KEY,
+    liquidation_id VARCHAR(36) NOT NULL,
+    product_id VARCHAR(36) NOT NULL,
+    title_snapshot VARCHAR(150) NOT NULL,
+    code_snapshot VARCHAR(30) NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price NUMERIC(10, 2) NOT NULL CHECK (unit_price > 0),
+    unit_commission NUMERIC(10, 2) NOT NULL CHECK (unit_commission >= 0),
+    gross_subtotal NUMERIC(12, 2) NOT NULL CHECK (gross_subtotal >= 0),
+    commission_subtotal NUMERIC(12, 2) NOT NULL CHECK (commission_subtotal >= 0),
+    FOREIGN KEY (liquidation_id) REFERENCES liquidations(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
+);
+
+-- ------------------------------------------------------------------------------
+-- 17. TABLA: LIQUIDATION_SALES (HU-15: ventas incluidas; evita liquidar una venta dos veces)
+--     sale_id es PRIMARY KEY: la base de datos impide que una venta aparezca en 2 liquidaciones.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS liquidation_sales (
+    sale_id VARCHAR(36) PRIMARY KEY,
+    liquidation_id VARCHAR(36) NOT NULL,
+    FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE RESTRICT,
+    FOREIGN KEY (liquidation_id) REFERENCES liquidations(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------------------------
+-- 18. TABLA: LIQUIDATION_PAYMENTS (HU-16: cada cobro es un movimiento independiente)
+--     Nunca se sobrescribe ni se elimina: el historial de cobranzas queda completo.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS liquidation_payments (
+    id VARCHAR(36) PRIMARY KEY,
+    liquidation_id VARCHAR(36) NOT NULL,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('CASH', 'VOUCHER', 'TRANSFER')),
+    payment_date DATE NOT NULL,
+    evidence TEXT,                                  -- N° de constancia / comprobante / operación
+    registered_by_user_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (liquidation_id) REFERENCES liquidations(id) ON DELETE RESTRICT,
+    FOREIGN KEY (registered_by_user_id) REFERENCES users(id) ON DELETE RESTRICT
+);
+
 -- ==============================================================================
 -- ÍNDICES DE RENDIMIENTO Y AISLAMIENTO DE DATOS MULTI-SEDE
 -- ==============================================================================
@@ -292,6 +367,12 @@ CREATE INDEX IF NOT EXISTS idx_repl_items_request ON replenishment_request_items
 CREATE INDEX IF NOT EXISTS idx_inv_movements_request ON inventory_movements(replenishment_request_id);
 CREATE INDEX IF NOT EXISTS idx_inv_movements_branch_prod ON inventory_movements(branch_id, product_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_target ON notifications(target_role, target_branch_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_liquidations_branch_status ON liquidations(branch_id, status);
+CREATE INDEX IF NOT EXISTS idx_liquidations_period ON liquidations(period_start, period_end);
+CREATE INDEX IF NOT EXISTS idx_liq_items_liquidation ON liquidation_items(liquidation_id);
+CREATE INDEX IF NOT EXISTS idx_liq_sales_liquidation ON liquidation_sales(liquidation_id);
+CREATE INDEX IF NOT EXISTS idx_liq_payments_liquidation ON liquidation_payments(liquidation_id);
+CREATE INDEX IF NOT EXISTS idx_sales_branch_status_date ON sales(branch_id, status, created_at);
 
 -- ==============================================================================
 -- DATOS SEMILLA BASE INICIALES (MÍNIMOS NECESARIOS)
