@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { BookOpen, Building2, Layers, LogOut, ShoppingCart, Truck, UserCircle } from 'lucide-react';
+import { BookOpen, Building2, ClipboardList, Layers, LogOut, ShoppingCart, Truck, UserCircle } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 
-export type NavTab = 'branches' | 'products' | 'inventory' | 'consignments' | 'sales';
+export type NavTab = 'branches' | 'products' | 'inventory' | 'consignments' | 'replenishments' | 'sales';
 
 interface NavbarProps {
   currentTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
+  onOpenReplenishment: (requestId: string | null) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab, onOpenReplenishment }) => {
   const { user, logout } = useAuth();
   const [criticalCount, setCriticalCount] = useState<number>(0);
 
@@ -128,10 +130,23 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               <Truck className="w-4 h-4" />
               <span>Despachos</span>
             </button>
+
+            <button
+              onClick={() => onSelectTab('replenishments')}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                currentTab === 'replenishments'
+                  ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span>Reposición</span>
+            </button>
           </nav>
 
           {/* Perfil de usuario y Logout */}
           <div className="flex items-center gap-3">
+            <NotificationBell onOpenReplenishment={onOpenReplenishment} />
             <div className="hidden md:flex flex-col items-end">
               <span className="text-sm font-semibold text-slate-800 leading-tight">{user?.full_name}</span>
               <div className="mt-0.5">{getRoleBadge(user?.role)}</div>

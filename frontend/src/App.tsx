@@ -9,6 +9,7 @@ import { ProductsView } from './views/admin/ProductsView';
 import { InventoryView } from './views/inventory/InventoryView';
 import { ConsignmentsView } from './views/consignments/ConsignmentsView';
 import { SalesView } from './views/sales/SalesView';
+import { ReplenishmentsView } from './views/replenishments/ReplenishmentsView';
 
 const MainApp: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -21,6 +22,13 @@ const MainApp: React.FC = () => {
     if (user?.role === 'LOGISTICS') setCurrentTab('inventory');
     if (user?.role === 'ADMIN') setCurrentTab('branches');
   }, [user?.role]);
+
+  // HU-13: al abrir una notificación se navega a Reposición y (Logística) se abre la solicitud
+  const [focusRequestId, setFocusRequestId] = useState<string | null>(null);
+  const openReplenishmentFromNotification = (requestId: string | null) => {
+    setFocusRequestId(requestId);
+    setCurrentTab('replenishments');
+  };
 
   if (isLoading) {
     return (
@@ -52,6 +60,13 @@ const MainApp: React.FC = () => {
         return <InventoryView />;
       case 'consignments':
         return <ConsignmentsView />;
+      case 'replenishments':
+        return (
+          <ReplenishmentsView
+            focusRequestId={focusRequestId}
+            onFocusHandled={() => setFocusRequestId(null)}
+          />
+        );
       case 'sales':
         return <SalesView />;
       default:
@@ -62,7 +77,11 @@ const MainApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <OfflineBanner />
-      <Navbar currentTab={currentTab} onSelectTab={setCurrentTab} />
+      <Navbar
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
+        onOpenReplenishment={openReplenishmentFromNotification}
+      />
       <main className="flex-1">{renderContent()}</main>
     </div>
   );
