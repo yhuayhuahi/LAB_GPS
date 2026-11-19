@@ -49,6 +49,9 @@ export class SaleService {
       const sale = await client.queryOne<any>('SELECT * FROM sales WHERE id = $1 AND branch_id = $2', [saleId, user.branch_id]);
       if (!sale) throw AppError.notFound('La venta no pertenece a su sede', 'SALE_NOT_FOUND');
       if (sale.status === 'ANNULLED') throw AppError.conflict('Esta venta ya fue anulada', 'SALE_ALREADY_ANNULLED');
+      // HU-15: una venta incluida en una liquidación ya no puede anularse (alteraría importes cobrados)
+      const liquidated = await client.queryOne<any>('SELECT liquidation_id FROM liquidation_sales WHERE sale_id = $1', [saleId]);
+      if (liquidated) throw AppError.conflict('La venta ya fue incluida en una liquidación y no puede anularse', 'SALE_ALREADY_LIQUIDATED');
       const items = await client.query<any>('SELECT product_id, quantity FROM sale_items WHERE sale_id = $1', [saleId]);
       for (const item of items) await client.execute('UPDATE branch_stock SET available_quantity = available_quantity + $1, sold_quantity = sold_quantity - $1, updated_at = CURRENT_TIMESTAMP WHERE branch_id = $2 AND product_id = $3', [Number(item.quantity), user.branch_id, item.product_id]);
       await client.execute(`UPDATE sales SET status = 'ANNULLED', observations = $1 WHERE id = $2`, [`ANULADA: ${justification.trim()}`, saleId]);
