@@ -4,7 +4,9 @@ import authRoutes from './auth.routes';
 import branchRoutes from './branch.routes';
 import consignmentRoutes from './consignment.routes';
 import inventoryRoutes from './inventory.routes';
+import notificationRoutes from './notification.routes';
 import productRoutes from './product.routes';
+import replenishmentRoutes from './replenishment.routes';
 import saleRoutes from './sale.routes';
 
 const router = Router();
@@ -37,5 +39,9 @@ router.use('/products', productRoutes);
 router.use('/consignments', consignmentRoutes);
 router.use('/inventory', inventoryRoutes);
 router.use('/sales', saleRoutes);
+
+// Sprint 4: Reabastecimiento y notificaciones (HU-13 / HU-14)
+router.use('/replenishments', replenishmentRoutes);
+router.use('/notifications', notificationRoutes);
 
 export default router;
