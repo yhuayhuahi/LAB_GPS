@@ -14,7 +14,9 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(16, 'JWT_SECRET debe tener al menos 16 caracteres').default('qsy_super_secret_jwt_key_for_development_purposes_only_2026'),
   JWT_EXPIRES_IN: z.string().default('8h'),
   CORS_ORIGIN: z.string().default('*'),
-  APP_VERSION: z.string().default('1.0.0')
+  APP_VERSION: z.string().default('1.0.0'),
+  // HU-16: días de plazo para cobrar una liquidación, contados desde el fin de su período
+  LIQUIDATION_DUE_DAYS: z.coerce.number().int().min(0).max(365).default(7)
 });
 
 const parsed = envSchema.safeParse(process.env);

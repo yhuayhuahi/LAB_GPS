@@ -271,3 +271,90 @@ export interface AppNotification {
   created_at: string;
   read_at?: string | null;
 }
+
+// ============================================================================
+// SPRINT 4 (cont.): LIQUIDACIONES Y COBRANZAS (HU-15 / HU-16)
+// ============================================================================
+export type LiquidationStatus = 'PENDING' | 'PARTIAL' | 'PAID';
+export type CollectionMethod = 'CASH' | 'VOUCHER' | 'TRANSFER';
+
+export interface LiquidationItem {
+  id?: string;
+  product_id: string;
+  code_snapshot: string;
+  title_snapshot: string;
+  quantity: number;
+  unit_price: number;
+  unit_commission: number;
+  gross_subtotal: number;
+  commission_subtotal: number;
+}
+
+export interface LiquidationPayment {
+  id: string;
+  liquidation_id: string;
+  amount: number;
+  payment_method: CollectionMethod;
+  payment_date: string;
+  evidence?: string | null;
+  registered_by_user_id: string;
+  registered_by_name?: string;
+  created_at: string;
+}
+
+export interface LiquidationPreview {
+  branch_id: string;
+  branch_name: string;
+  period_start: string;
+  period_end: string;
+  sales_count: number;
+  already_liquidated_sales: number; // ventas del período que ya pertenecen a otra liquidación (se excluyen)
+  gross_amount: number;
+  commission_amount: number;
+  net_amount: number;
+  due_date: string;
+  details: LiquidationItem[];
+}
+
+export interface Liquidation {
+  id: string;
+  liquidation_code: string;
+  branch_id: string;
+  branch_name?: string;
+  period_start: string;
+  period_end: string;
+  sales_count: number;
+  gross_amount: number;
+  commission_amount: number;
+  net_amount: number;
+  paid_amount: number;
+  pending_amount: number;
+  status: LiquidationStatus;
+  due_date: string;
+  is_overdue: boolean;
+  notes?: string | null;
+  created_by_user_id: string;
+  created_by_name?: string;
+  created_at: string;
+  details?: LiquidationItem[];
+  payments?: LiquidationPayment[];
+}
+
+export interface BranchDebtSummary {
+  branch_id: string;
+  branch_name: string;
+  liquidations_count: number;
+  open_liquidations: number;
+  overdue_liquidations: number;
+  net_total: number;
+  paid_total: number;
+  pending_total: number;
+  overdue_pending: number;
+}
+
+export interface DebtsOverview {
+  total_to_collect: number; // suma de saldos pendientes
+  total_collected: number; // suma de pagos recibidos
+  total_overdue: number; // saldo pendiente de liquidaciones vencidas
+  branches: BranchDebtSummary[];
+}
