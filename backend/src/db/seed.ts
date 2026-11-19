@@ -86,6 +86,21 @@ export async function seedDemoData() {
       ('bstock-qsy-bas', 'branch-01', 'prod-qsy-bas', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-qsy-int', 'branch-01', 'prod-qsy-int', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-qsy-avn', 'branch-01', 'prod-qsy-avn', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-qsy-dic', 'branch-01', 'prod-qsy-dic', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-pk-bas', 'branch-01', 'prod-pk-bas', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-pk-int', 'branch-01', 'prod-pk-int', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-pk-avn', 'branch-01', 'prod-pk-avn', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-kusi-bas', 'branch-01', 'prod-kusi-bas', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-kusi-int', 'branch-01', 'prod-kusi-int', 8, 0, 8, CURRENT_TIMESTAMP), ('bstock-kusi-avn', 'branch-01', 'prod-kusi-avn', 8, 0, 8, CURRENT_TIMESTAMP)
     ON CONFLICT (branch_id, product_id) DO UPDATE SET received_quantity = EXCLUDED.received_quantity, available_quantity = EXCLUDED.available_quantity;
   `);
+
+  // 7. Solicitud de reposición pendiente de demostración (HU-13 / HU-14, Sprint 4)
+  await db.execute(`
+    INSERT OR IGNORE INTO replenishment_requests (id, request_code, branch_id, requested_by_user_id, status, notes, created_at)
+    VALUES ('repl-demo-01', 'REP-DEMO-0001', 'branch-01', 'user-dist-trilce', 'PENDING', 'Quedan pocos ejemplares en mostrador', CURRENT_TIMESTAMP);
+
+    INSERT OR IGNORE INTO replenishment_request_items (id, request_id, product_id, requested_quantity, delivered_quantity)
+    VALUES
+      ('repl-item-demo-01', 'repl-demo-01', 'prod-qsy-bas', 10, 0),
+      ('repl-item-demo-02', 'repl-demo-01', 'prod-pk-bas', 6, 0);
+
+    INSERT OR IGNORE INTO notifications (id, target_role, target_branch_id, type, title, message, replenishment_request_id, is_read, created_at)
+    VALUES ('notif-demo-01', 'LOGISTICS', 'branch-01', 'REPLENISHMENT_REQUESTED', 'Nueva solicitud de reposición REP-DEMO-0001',
+            'Vendedor Trilce (Mostrador) solicitó 2 título(s) y 16 ejemplar(es).', 'repl-demo-01', 0, CURRENT_TIMESTAMP);
+  `);
 }
 
 if (require.main === module) {
