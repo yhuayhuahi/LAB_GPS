@@ -353,3 +353,67 @@ Balances diarios automáticos de rendición de cuentas por distribuidora.
 | `created_at` | `TIMESTAMP` | NO | DEFAULT NOW | Fecha y hora de generación del balance. |
 
 *Restricción de unicidad:* `UNIQUE (branch_id, settlement_date)`.
+
+---
+
+### 3.11. Tabla: `replenishment_requests` (Sprint 4 · HU-13)
+Cabecera de la solicitud formal de reabastecimiento enviada por el distribuidor a Logística.
+
+| Campo | Tipo SQL | Nulo | Restricción | Descripción y Propósito de Negocio |
+|---|---|---|---|---|
+| `id` | `VARCHAR(36)` | NO | PK | Identificador de la solicitud. |
+| `request_code` | `VARCHAR(30)` | NO | UNIQUE | Código legible (ej. `'REP-2026-0001'`). |
+| `branch_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `branches.id` | Sede solicitante, tomada del token del usuario (**RN-05**). |
+| `requested_by_user_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `users.id` | Distribuidor que envía el pedido. |
+| `status` | `VARCHAR(30)` | NO | DEFAULT `'PENDING'`, CHECK | `'PENDING'` (Pendiente) o `'COMPLETED'` (Completada). |
+| `notes` | `TEXT` | SÍ | — | Observaciones del pedido y de la entrega. |
+| `created_at` | `TIMESTAMP` | NO | DEFAULT NOW | Fecha de registro. |
+| `completed_at` | `TIMESTAMP` | SÍ | — | Fecha de entrega registrada por Logística. |
+| `completed_by_user_id` | `VARCHAR(36)` | SÍ | FK $\rightarrow$ `users.id` | Logística que registró la entrega (HU-14). |
+
+---
+
+### 3.12. Tabla: `replenishment_request_items` (Sprint 4 · HU-13 / HU-14)
+Detalle por título de cada solicitud.
+
+| Campo | Tipo SQL | Nulo | Restricción | Descripción y Propósito de Negocio |
+|---|---|---|---|---|
+| `id` | `VARCHAR(36)` | NO | PK | Identificador de la línea. |
+| `request_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `replenishment_requests.id` | Solicitud asociada. |
+| `product_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `products.id` | Libro solicitado. |
+| `requested_quantity` | `INTEGER` | NO | CHECK ($> 0$) | Cantidad solicitada (entero mayor que cero). |
+| `delivered_quantity` | `INTEGER` | NO | DEFAULT 0, CHECK ($\ge 0$) | Cantidad realmente entregada (HU-14). |
+
+*Restricción de unicidad:* `UNIQUE (request_id, product_id)`.
+
+---
+
+### 3.13. Tabla: `inventory_movements` (Sprint 4 · HU-14)
+Trazabilidad de la reposición: cada entrega genera una **salida** del Almacén Central y una **entrada** a la sede.
+
+| Campo | Tipo SQL | Nulo | Restricción | Descripción y Propósito de Negocio |
+|---|---|---|---|---|
+| `id` | `VARCHAR(36)` | NO | PK | Identificador del movimiento. |
+| `product_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `products.id` | Libro movido. |
+| `movement_type` | `VARCHAR(30)` | NO | CHECK | `'REPLENISHMENT_OUT'` o `'REPLENISHMENT_IN'`. |
+| `location_type` | `VARCHAR(20)` | NO | CHECK | `'CENTRAL'` o `'BRANCH'`. |
+| `branch_id` | `VARCHAR(36)` | SÍ | FK $\rightarrow$ `branches.id` | Sede (NULL si la ubicación es el Almacén Central). |
+| `quantity` | `INTEGER` | NO | CHECK ($> 0$) | Ejemplares movidos. |
+| `replenishment_request_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `replenishment_requests.id` | Solicitud que originó el movimiento. |
+| `performed_by_user_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `users.id` | Responsable de la operación. |
+| `created_at` | `TIMESTAMP` | NO | DEFAULT NOW | Fecha del movimiento. |
+
+---
+
+### 3.14. Tabla: `notifications` (Sprint 4 · HU-13)
+Notificaciones internas simples del MVP (sin servicios externos).
+
+| Campo | Tipo SQL | Nulo | Restricción | Descripción y Propósito de Negocio |
+|---|---|---|---|---|
+| `id` | `VARCHAR(36)` | NO | PK | Identificador. |
+| `target_role` | `VARCHAR(30)` | NO | — | Rol destinatario (`'LOGISTICS'`, `'DISTRIBUTOR'`). |
+| `target_branch_id` | `VARCHAR(36)` | SÍ | FK $\rightarrow$ `branches.id` | Sede destinataria (los distribuidores solo ven la suya, **RN-05**). |
+| `type` | `VARCHAR(40)` | NO | — | `'REPLENISHMENT_REQUESTED'` o `'REPLENISHMENT_COMPLETED'`. |
+| `title` / `message` | `VARCHAR(150)` / `TEXT` | NO | — | Texto mostrado en la campana. |
+| `replenishment_request_id` | `VARCHAR(36)` | SÍ | FK $\rightarrow$ `replenishment_requests.id` | Solicitud relacionada. |
+| `is_read` / `read_at` | `BOOLEAN` / `TIMESTAMP` | NO / SÍ | DEFAULT FALSE | Estado de lectura. |
