@@ -4,6 +4,7 @@ import authRoutes from './auth.routes';
 import branchRoutes from './branch.routes';
 import consignmentRoutes from './consignment.routes';
 import inventoryRoutes from './inventory.routes';
+import liquidationRoutes from './liquidation.routes';
 import notificationRoutes from './notification.routes';
 import productRoutes from './product.routes';
 import replenishmentRoutes from './replenishment.routes';
@@ -43,5 +44,8 @@ router.use('/sales', saleRoutes);
 // Sprint 4: Reabastecimiento y notificaciones (HU-13 / HU-14)
 router.use('/replenishments', replenishmentRoutes);
 router.use('/notifications', notificationRoutes);
+
+// Sprint 4 (cont.): Liquidaciones y cobranzas (HU-15 / HU-16)
+router.use('/liquidations', liquidationRoutes);
 
 export default router;
