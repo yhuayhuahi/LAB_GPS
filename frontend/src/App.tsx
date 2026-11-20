@@ -10,6 +10,7 @@ import { InventoryView } from './views/inventory/InventoryView';
 import { ConsignmentsView } from './views/consignments/ConsignmentsView';
 import { SalesView } from './views/sales/SalesView';
 import { ReplenishmentsView } from './views/replenishments/ReplenishmentsView';
+import { LiquidationsView } from './views/liquidations/LiquidationsView';
 
 const MainApp: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -67,6 +68,8 @@ const MainApp: React.FC = () => {
             onFocusHandled={() => setFocusRequestId(null)}
           />
         );
+      case 'liquidations':
+        return <LiquidationsView />;
       case 'sales':
         return <SalesView />;
       default:

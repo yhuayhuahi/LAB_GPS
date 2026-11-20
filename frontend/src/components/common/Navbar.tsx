@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
-import { BookOpen, Building2, ClipboardList, Layers, LogOut, ShoppingCart, Truck, UserCircle } from 'lucide-react';
+import { BookOpen, Building2, ClipboardList, Layers, LogOut, Receipt, ShoppingCart, Truck, UserCircle } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 
-export type NavTab = 'branches' | 'products' | 'inventory' | 'consignments' | 'replenishments' | 'sales';
+export type NavTab = 'branches' | 'products' | 'inventory' | 'consignments' | 'replenishments' | 'liquidations' | 'sales';
 
 interface NavbarProps {
   currentTab: NavTab;
@@ -142,6 +142,20 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab, onOpenR
               <ClipboardList className="w-4 h-4" />
               <span>Reposición</span>
             </button>
+
+            {isManagement && (
+              <button
+                onClick={() => onSelectTab('liquidations')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  currentTab === 'liquidations'
+                    ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                <Receipt className="w-4 h-4" />
+                <span>Liquidaciones</span>
+              </button>
+            )}
           </nav>
 
           {/* Perfil de usuario y Logout */}
