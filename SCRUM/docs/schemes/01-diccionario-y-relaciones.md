@@ -417,3 +417,64 @@ Notificaciones internas simples del MVP (sin servicios externos).
 | `title` / `message` | `VARCHAR(150)` / `TEXT` | NO | — | Texto mostrado en la campana. |
 | `replenishment_request_id` | `VARCHAR(36)` | SÍ | FK $\rightarrow$ `replenishment_requests.id` | Solicitud relacionada. |
 | `is_read` / `read_at` | `BOOLEAN` / `TIMESTAMP` | NO / SÍ | DEFAULT FALSE | Estado de lectura. |
+
+---
+
+### 3.15. Tabla: `liquidations` (Sprint 4 · HU-15 / HU-16)
+Liquidación de una distribuidora por período: lo que debe entregar a QSY (**Bruto − Comisión = Neto**). Los importes se congelan al generarse. El estado de cobro (HU-16) se deriva de `liquidation_payments`.
+
+| Campo | Tipo SQL | Nulo | Restricción | Descripción y Propósito de Negocio |
+|---|---|---|---|---|
+| `id` | `VARCHAR(36)` | NO | PK | Identificador. |
+| `liquidation_code` | `VARCHAR(30)` | NO | UNIQUE | Código legible (`'LIQ-2026-0001'`). |
+| `branch_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `branches.id` | Distribuidora liquidada. |
+| `period_start` / `period_end` | `DATE` | NO | CHECK (`end >= start`) | Período (días completos, hora de Lima). |
+| `sales_count` | `INTEGER` | NO | — | Ventas incluidas. |
+| `gross_amount` | `NUMERIC(12,2)` | NO | CHECK ($\ge 0$) | Ingreso bruto = $\sum$ precio × cantidad. |
+| `commission_amount` | `NUMERIC(12,2)` | NO | CHECK ($\ge 0$) | Comisión fija total = $\sum$ comisión × cantidad (**RN-06**). |
+| `net_amount` | `NUMERIC(12,2)` | NO | CHECK ($\ge 0$) | Neto a entregar a QSY. |
+| `paid_amount` / `pending_amount` | `NUMERIC(12,2)` | NO | CHECK ($\ge 0$) | Cobrado y saldo pendiente (HU-16). |
+| `status` | `VARCHAR(20)` | NO | CHECK | `'PENDING'`, `'PARTIAL'`, `'PAID'`. |
+| `due_date` | `DATE` | NO | — | Vencimiento = `period_end` + `LIQUIDATION_DUE_DAYS` (7 por defecto). |
+| `notes` | `TEXT` | SÍ | — | Observaciones. |
+| `created_by_user_id` / `created_at` | `VARCHAR(36)` / `TIMESTAMP` | NO | FK $\rightarrow$ `users.id` | Quién y cuándo generó la liquidación. |
+
+---
+
+### 3.16. Tabla: `liquidation_items` (Sprint 4 · HU-15)
+Desglose por título con **precio y comisión congelados** (una línea por título + precio + comisión).
+
+| Campo | Tipo SQL | Nulo | Restricción | Descripción y Propósito de Negocio |
+|---|---|---|---|---|
+| `id` | `VARCHAR(36)` | NO | PK | Identificador. |
+| `liquidation_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `liquidations.id` | Liquidación. |
+| `product_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `products.id` | Libro. |
+| `title_snapshot` / `code_snapshot` | `VARCHAR` | NO | — | Título y código al momento de liquidar. |
+| `quantity` | `INTEGER` | NO | CHECK ($> 0$) | Unidades vendidas. |
+| `unit_price` / `unit_commission` | `NUMERIC(10,2)` | NO | CHECK | Precio y comisión unitarios aplicados en las ventas. |
+| `gross_subtotal` / `commission_subtotal` | `NUMERIC(12,2)` | NO | CHECK ($\ge 0$) | Subtotales de ventas y de comisión. |
+
+---
+
+### 3.17. Tabla: `liquidation_sales` (Sprint 4 · HU-15)
+Ventas incluidas en cada liquidación. **`sale_id` es PRIMARY KEY**: la base de datos impide liquidar una venta dos veces.
+
+| Campo | Tipo SQL | Nulo | Restricción | Descripción y Propósito de Negocio |
+|---|---|---|---|---|
+| `sale_id` | `VARCHAR(36)` | NO | PK, FK $\rightarrow$ `sales.id` | Venta liquidada. |
+| `liquidation_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `liquidations.id` | Liquidación que la contiene. |
+
+---
+
+### 3.18. Tabla: `liquidation_payments` (Sprint 4 · HU-16)
+Cada cobro es un movimiento independiente; no se sobrescribe ni elimina.
+
+| Campo | Tipo SQL | Nulo | Restricción | Descripción y Propósito de Negocio |
+|---|---|---|---|---|
+| `id` | `VARCHAR(36)` | NO | PK | Identificador (ordenable por fecha de registro). |
+| `liquidation_id` | `VARCHAR(36)` | NO | FK $\rightarrow$ `liquidations.id` | Liquidación cobrada. |
+| `amount` | `NUMERIC(12,2)` | NO | CHECK ($> 0$) | Monto recibido (máx. 2 decimales, nunca mayor al saldo). |
+| `payment_method` | `VARCHAR(20)` | NO | CHECK | `'CASH'`, `'VOUCHER'` (constancia/comprobante), `'TRANSFER'`. |
+| `payment_date` | `DATE` | NO | — | Fecha del pago (no futura). |
+| `evidence` | `TEXT` | SÍ | — | N° de constancia / referencia (obligatoria si no es efectivo). |
+| `registered_by_user_id` / `created_at` | `VARCHAR(36)` / `TIMESTAMP` | NO | FK $\rightarrow$ `users.id` | Quién y cuándo registró el cobro. |
