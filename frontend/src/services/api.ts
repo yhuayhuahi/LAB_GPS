@@ -4,8 +4,13 @@ import type {
   CentralStock,
   AppNotification,
   Consignment,
+  CollectionMethod,
   CriticalStockAlert,
+  DebtsOverview,
   InventoryBalanceResponse,
+  Liquidation,
+  LiquidationFilters,
+  LiquidationPreview,
   LoginResponseData,
   NonCommercialExit,
   NotificationsResponse,
@@ -174,5 +179,30 @@ export const api = {
     list: () => request<NotificationsResponse>('/notifications'),
     markRead: (id: string) => request<Pick<AppNotification, 'id' | 'is_read'>>(`/notifications/${id}/read`, { method: 'PUT' }),
     markAllRead: () => request<{ updated: boolean }>('/notifications/read-all', { method: 'PUT' })
+  },
+  // Sprint 4 (cont.): HU-15 / HU-16
+  liquidations: {
+    preview: (branchId: string, start: string, end: string) =>
+      request<LiquidationPreview>(
+        `/liquidations/preview?branch_id=${encodeURIComponent(branchId)}&period_start=${start}&period_end=${end}`
+      ),
+    create: (data: { branch_id: string; period_start: string; period_end: string; notes?: string }) =>
+      request<Liquidation>('/liquidations', { method: 'POST', body: JSON.stringify(data) }),
+    list: (f: LiquidationFilters = {}) => {
+      const p = new URLSearchParams();
+      if (f.branch_id) p.set('branch_id', f.branch_id);
+      if (f.status) p.set('status', f.status);
+      if (f.from) p.set('from', f.from);
+      if (f.to) p.set('to', f.to);
+      if (f.overdue) p.set('overdue', 'true');
+      const qs = p.toString();
+      return request<Liquidation[]>(`/liquidations${qs ? `?${qs}` : ''}`);
+    },
+    getById: (id: string) => request<Liquidation>(`/liquidations/${id}`),
+    debts: () => request<DebtsOverview>('/liquidations/debts'),
+    addPayment: (
+      id: string,
+      data: { amount: number; payment_method: CollectionMethod; payment_date?: string; evidence?: string }
+    ) => request<Liquidation>(`/liquidations/${id}/payments`, { method: 'POST', body: JSON.stringify(data) })
   }
 };
